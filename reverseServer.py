@@ -1,3 +1,6 @@
+import asyncio
+from asyncio import WindowsSelectorEventLoopPolicy
+
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 import httpx
@@ -5,10 +8,20 @@ import json
 import uvicorn
 import time
 
+from db import initialize_pool
+
 servApp = FastAPI()
 
+
+async def startDb():
+    await initialize_pool()
+
+
 if __name__ == "__main__":
+    asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
+    asyncio.run(startDb())
     uvicorn.run("reverseServer:servApp", host="127.0.0.1", port=5001, reload=True)
+
 
 @servApp.post("/proxy/")
 async def proxy(request: Request):
@@ -22,7 +35,6 @@ async def proxy(request: Request):
 
 
 client = TestClient(servApp)
-
 
 '''
 def ping():
@@ -46,5 +58,3 @@ while True:
     ping()
     #time.sleep(5)
     '''
-
-

@@ -1,7 +1,6 @@
 from db import get_conn
 from idGenerator import generationId
 
-
 async def getAllUsers():
     try:
         async with await get_conn() as conn:
