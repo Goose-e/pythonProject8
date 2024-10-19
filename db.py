@@ -1,18 +1,24 @@
-import psycopg2
+from functools import lru_cache
+
+import psycopg
+import asyncio
+from psycopg_pool import AsyncConnectionPool, ConnectionPool
+
 from config import *
 
-try:
-    connection = psycopg2.connect(
-        host=host,  # Адрес сервера
-        database=database,  # Название базы данных
-        user=user,  # Имя пользователя PostgreSQL
-        password=password  # Пароль пользователя
-    )
-    cursor = connection.cursor()
+asyncConnectionPool = None
 
-except Exception as ex:
-    print(f"[INFO] Error while working: {ex}")
-finally:
-    if connection:
-        connection.close()
-        print("[INFO] connection closed")
+
+async def initialize_pool():
+    global asyncConnectionPool
+    asyncConnectionPool = AsyncConnectionPool(
+        f"dbname={database} user={user} password={password} host={host}",
+        min_size=1,
+        max_size=10,
+    )
+    await asyncConnectionPool.open()
+
+
+async def get_conn():
+    conn = await asyncConnectionPool.getconn()
+    return conn
