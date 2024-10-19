@@ -24,7 +24,7 @@ async def initialize_pool():
                 DO $$
                 BEGIN
                     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'hackaton_admin') THEN
-                        CREATE ROLE hackaton_admin WITH LOGIN PASSWORD 'ваш_пароль';
+                        CREATE ROLE hackaton_admin WITH LOGIN PASSWORD 'admin';
                         ALTER ROLE hackaton_admin CREATEDB;
                     END IF;
                 END $$;
