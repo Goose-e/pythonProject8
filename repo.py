@@ -14,8 +14,7 @@ async def getAllUsers():
 
         return
 
-
-async def getUserInfo():
+async def getAllUserInfo():
     try:
         async with await get_conn() as conn:
             async with conn.cursor() as cursor:
@@ -25,7 +24,6 @@ async def getUserInfo():
     except Exception as ex:
         print(f"Error: ", ex)
         return
-
 
 async def findUserById(id):
     try:

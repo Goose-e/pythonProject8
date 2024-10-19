@@ -4,7 +4,7 @@ from asyncio import WindowsSelectorEventLoopPolicy
 from flask import Flask, g
 from flask_talisman import Talisman
 
-from repo import getAllUsers, getUserInfo, findUserById, saveInfoInDB
+from repo import getAllUsers, getAllUserInfo, findUserById, saveInfoInDB
 from serviceMethods import MethBP
 from db import get_conn, initialize_pool
 import asyncio
