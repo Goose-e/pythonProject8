@@ -1,16 +1,18 @@
-from csv import excel
-
 import psycopg2
+from config import *
 
+try:
+    connection = psycopg2.connect(
+        host=host,  # Адрес сервера
+        database=database,  # Название базы данных
+        user=user,  # Имя пользователя PostgreSQL
+        password=password  # Пароль пользователя
+    )
+    cursor = connection.cursor()
 
-def connectToDb():
-    try:
-        connection = psycopg2.connect(
-            host="localhost",  # Адрес сервера
-            database="Hackaton",  # Название базы данных
-            user="hackaton_admin",  # Имя пользователя PostgreSQL
-            password="hackaton"  # Пароль пользователя
-        )
-    except:
-        print("error")
-
+except Exception as ex:
+    print(f"[INFO] Error while working: {ex}")
+finally:
+    if connection:
+        connection.close()
+        print("[INFO] connection closed")
