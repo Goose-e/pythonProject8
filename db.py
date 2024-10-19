@@ -1,126 +1,133 @@
-from functools import lru_cache
 import psycopg
-import asyncio
 from psycopg_pool import AsyncConnectionPool
-
 import idGenerator
 from config import *
 
 asyncConnectionPool = None
 
 
+# Инициализация пула асинхронных подключений
 async def initialize_pool():
     global asyncConnectionPool
-
     asyncConnectionPool = AsyncConnectionPool(
-        f"dbname={database} user={user} password='{password}' host='{host}'",
+        f"dbname={dbConst} user={user} password='{password}' host='{host}'",
         min_size=1,
         max_size=10,
     )
     await asyncConnectionPool.open()
 
 
-class DaBa():
+class DaBa:
     def __init__(self):
         self.con = psycopg.connect(
-            dbname=database,
-            user=user,  # Укажите имя пользователя с правами суперпользователя
-            password=password,  # Укажите пароль суперпользователя
+            dbname=dbConst,
+            user=user,  # Имя пользователя для подключения к базе данных
+            password=password,  # Пароль пользователя
             host=host
         )
         self.cur = self.con.cursor()
 
-    def create_user(self, username, user_password):
-        # Создание пользователя с указанным паролем
-        self.cur.execute(f"CREATE USER {username} WITH PASSWORD '{user_password}';")
-        # Предоставление прав на создание баз данных
-        self.cur.execute(f"ALTER USER {username} CREATEDB;")
-        self.con.commit()
-
-    def grant_privileges(self, username, database):
-        # Назначение всех прав пользователю на указанную базу данных
-        self.cur.execute(f"GRANT ALL PRIVILEGES ON DATABASE {database} TO {username};")
-        self.con.commit()
-
-    def createTableUser(self):
-        self.cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS user_info (
-                user_info_id BIGINT NOT NULL PRIMARY KEY,
-                user_id BIGINT NOT NULL,
-                secret_info VARCHAR
-            );
-            """
-        )
-        self.cur.execute("ALTER TABLE user_info OWNER TO hackaton_admin;")
-        self.cur.execute(
-            "GRANT DELETE, INSERT, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE ON user_info TO hackaton_admin;"
-        )
-        self.con.commit()
-
-    def createAdmin(self):
-        self.cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS admin (
-                admin_id       BIGINT NOT NULL PRIMARY KEY,
-                admin_login    VARCHAR(20) NOT NULL UNIQUE,
-                admin_password VARCHAR(255) NOT NULL
-            );
-            """
-        )
+    # Создание таблицы admin
+    def create_admin_table(self):
+        self.cur.execute('DROP TABLE IF EXISTS "admin";')
+        self.cur.execute("""
+                    CREATE TABLE "admin" (
+                        "admin_id" BIGINT NOT NULL PRIMARY KEY,
+                        "admin_login" VARCHAR(20) NOT NULL UNIQUE,
+                        "admin_password" VARCHAR(255) NOT NULL
+                    );
+                """)
         self.cur.execute("ALTER TABLE admin OWNER TO hackaton_admin;")
         self.cur.execute("GRANT ALL PRIVILEGES ON DATABASE Hackaton TO hackaton_admin;")
         self.con.commit()
 
-    # Метод добавления админа
-    def addAdmin(self, login, password):
+    # Добавление администратора
+    def add_admin(self, login, password):
         self.cur.execute(
-            "INSERT INTO Admin (admin_id, admin_login, admin_password) VALUES (%s, %s, %s)",
+            "INSERT INTO admin (admin_id, admin_login, admin_password) VALUES (%s, %s, %s)",
             (idGenerator.generationId(), login, password)
         )
         self.con.commit()
 
+    # Создание таблицы user_info
+    def create_user_table(self):
+        self.cur.execute(f"""
+          DROP TABLE IF EXISTS {dbConst};
+            CREATE TABLE user_info (
+                user_info_id BIGINT NOT NULL PRIMARY KEY,
+                user_id BIGINT NOT NULL,
+                secret_info VARCHAR
+            );
+        """)
+        self.cur.execute("ALTER TABLE user_info OWNER TO hackaton_admin;")
+        self.cur.execute("""
+            GRANT DELETE, INSERT, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE 
+            ON user_info TO hackaton_admin;
+        """)
+        self.con.commit()
 
-class UserManager():
+
+class UserManager:
     def __init__(self):
-        # Подключение от имени суперпользователя
+        # Подключение к системной базе данных 'postgres' для управления пользователями
         self.con = psycopg.connect(
-            dbname=database,  # Подключение к системной базе данных, чтобы управлять пользователями
-            user='postgres',  # Укажите имя суперпользователя
-            password='Kolos213',  # Укажите пароль суперпользователя
+            dbname='postgres',  # Подключение к системной базе данных
+            user='postgres',  # Имя суперпользователя
+            password=f'{superUserPassword}',  # Пароль суперпользователя
             host='localhost'
         )
         self.cur = self.con.cursor()
 
+    # Создание или замена пользователя
     def create_user(self, username, user_password):
-        # Создание пользователя с указанным паролем
-        self.cur.execute(f"CREATE USER {username} WITH PASSWORD '{user_password}';")
-        # Предоставление прав на создание баз данных
-        self.cur.execute(f"ALTER USER {username} CREATEDB;")
+        self.cur.execute(f"DROP ROLE IF EXISTS {username};")
+        self.cur.execute(f"CREATE ROLE {username} WITH LOGIN PASSWORD '{user_password}';")
+        self.cur.execute(f"ALTER ROLE {username} CREATEDB;")
         self.con.commit()
 
+    # Назначение привилегий пользователю
     def grant_privileges(self, username, database):
-        # Назначение всех прав пользователю на указанную базу данных
         self.cur.execute(f"GRANT ALL PRIVILEGES ON DATABASE {database} TO {username};")
+        self.cur.execute(f"GRANT CREATE ON SCHEMA public TO {username};")
         self.con.commit()
+
+    def create_database(self, database_name):
+        self.cur.close()
+        self.con.close()
+        with psycopg.connect(
+                dbname='postgres',
+                user='postgres',
+                password=f'{superUserPassword}',
+                host='localhost', autocommit=True
+        ) as temp_con:
+            with temp_con.cursor() as temp_cur:
+                temp_cur.execute(f"DROP DATABASE IF EXISTS  {database_name};")
+                temp_cur.execute(f"CREATE DATABASE {database_name};")
+                temp_con.commit()
+        self.con = psycopg.connect(
+            dbname=database_name,
+            user='postgres',
+            password=f'{superUserPassword}',
+            host='localhost'
+        )
+        self.cur = self.con.cursor()
+
 
 # Асинхронный метод для получения подключения
 async def get_conn():
     conn = await asyncConnectionPool.getconn()
     return conn
 
-if __name__ == "__main__":
-    manager = UserManager()
-    manager.create_user('hackaton_admin', 'ваш_пароль')
-    manager.grant_privileges('hackaton_admin', 'Hackaton')
-    DaBa().createAdmin()
-    DaBa().AddAdmin("admin", "admin")
-    DaBa().createTableUser()
-import psycopg
-
 
 # Пример использования
 if __name__ == "__main__":
+    superUserPassword = "Kolos213"
     manager = UserManager()
-    manager.create_user('hackaton_admin', 'ваш_пароль')
-    manager.grant_privileges('hackaton_admin', 'Hackaton')
+    manager.create_database(f'{dbConst}')
+    manager.create_user(f'{user}', f'{password}')
+    manager.grant_privileges(f'{user}', f'{dbConst}')
+
+    db = DaBa()
+    db.create_admin_table()
+    db.add_admin('admin_login', 'admin_password')
+    db.create_user_table()
