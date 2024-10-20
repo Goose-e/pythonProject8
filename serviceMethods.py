@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, request,redirect
 import json
 
+from servers.reverseServer1 import decode
+
 MethBP = Blueprint('Meth', __name__)
 
 @MethBP.route('/index')
@@ -19,6 +21,7 @@ def ping():
 @MethBP.route('/userPingTest', methods=["POST"])
 def userPing():
     if request.method == 'POST':
-        form = json.loads(request.data.decode())
+        form = json.loads(request.json)
+        #form = json.loads(request.data.decode('utf-8'))
         print(form)
         return "Запрос прошел"

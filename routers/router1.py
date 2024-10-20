@@ -1,5 +1,7 @@
+import base64
 import json
-import Cryptodome.Cipher
+import logging
+
 from Cryptodome.Cipher import AES
 from Cryptodome.Random import get_random_bytes
 import rsa
@@ -11,11 +13,10 @@ from prometheus_client import CONTENT_TYPE_LATEST
 from fastapi.responses import Response
 import time
 
-from consts import portR1,servers
+from consts import portR1, servers
 from routers.metrics import REQUEST_COUNT, REQUEST_LATENCY
 
 router1 = FastAPI()
-
 
 current_server = 0
 
@@ -24,7 +25,6 @@ current_server = 0
 async def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
-
 def encrypt_data(data, public_key):
     aes_key = get_random_bytes(16)
     cipher_aes = AES.new(aes_key, AES.MODE_EAX)
@@ -32,11 +32,12 @@ def encrypt_data(data, public_key):
 
     encrypted_key = rsa.encrypt(aes_key, public_key)
 
+    # Кодируем значения в base64
     return {
-        'encrypted_key': encrypted_key,
-        'ciphertext': ciphertext,
-        'nonce': cipher_aes.nonce,
-        'tag': tag
+        'encrypted_key': base64.b64encode(encrypted_key).decode(),
+        'ciphertext': base64.b64encode(ciphertext).decode(),
+        'nonce': base64.b64encode(cipher_aes.nonce).decode(),
+        'tag': base64.b64encode(tag).decode()
     }
 
 
@@ -79,7 +80,7 @@ async def sendData(public_key, data):
     encrypted_data = encrypt_data(data, public_key)
     url = "http://127.0.0.1:5010/getData"
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, data=encrypted_data)
+        response = await client.post(url, json=encrypted_data)
         if response.status_code == 200:
             print("Ok")
         else:

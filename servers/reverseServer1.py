@@ -1,4 +1,5 @@
 import asyncio
+import base64
 from asyncio import WindowsSelectorEventLoopPolicy
 import rsa
 from fastapi import FastAPI, Request
@@ -33,14 +34,21 @@ async def get_public_key():
 
 @servApp.post("/getData")
 async def decode(request: Request):
-    encryptedData = await request.body()
+    print("Вызван метод decode")  # Вывод сообщения
+    encryptedData = await request.json()  # Вывод входящих данных
     try:
-        userData = decrypt_data(encryptedData, privateKey)
+        userData =  decrypt_data(encryptedData, privateKey)
+        # Проверяем, нужно ли декодировать
+        if isinstance(userData, bytes):
+            userData = userData.decode('utf-8')
+            userData = json.loads(userData)
+        print(f"Расшифрованные данные: {userData}")
         async with httpx.AsyncClient() as client:
-            response = await client.post("http://127.0.0.1:5010/proxy/", json=userData)
+            response = await client.post("http://127.0.0.1:5010/proxy/", data=userData)
             print(f"Ответ от proxy: {response.status_code}, {response.text}")
         return "Отправлено"
     except Exception as e:
+        print(f"Ошибка в decode: {e}")  # Вывод ошибки
         return {"status": "error", "message": str(e)}
 
 
@@ -48,7 +56,6 @@ async def decode(request: Request):
 async def proxy(request: Request):
     data = await request.json()
     data = data["message"]
-    print(data)
     data = Masking().maskData(data)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
@@ -57,15 +64,19 @@ async def proxy(request: Request):
     return "ok"
 
 
-def decrypt_data(encrypted_data, private_key):
-    encrypted_key = encrypted_data['encrypted_key']
-    ciphertext = encrypted_data['ciphertext']
-    nonce = encrypted_data['nonce']
-    tag = encrypted_data['tag']
-    aes_key = rsa.decrypt(encrypted_key, private_key)
-    cipher_aes = AES.new(aes_key, AES.MODE_EAX, nonce=nonce)
-    data = cipher_aes.decrypt_and_verify(ciphertext, tag)
-    return json.loads(data.decode())
+def decrypt_data(encrypted_data: dict, private_key: rsa.PrivateKey):
+
+    try:
+        encrypted_key = base64.b64decode(encrypted_data['encrypted_key'])
+        ciphertext = base64.b64decode(encrypted_data['ciphertext'])
+        nonce = base64.b64decode(encrypted_data['nonce'])
+        tag = base64.b64decode(encrypted_data['tag'])
+        aes_key = rsa.decrypt(encrypted_key, private_key)
+        cipher_aes = AES.new(aes_key, AES.MODE_EAX, nonce=nonce)
+        data = cipher_aes.decrypt_and_verify(ciphertext, tag)
+        return json.loads(data.decode('utf-8'))
+    except (ValueError, KeyError) as e:
+        raise
 
 
 if __name__ == "__main__":
