@@ -9,7 +9,9 @@ from prometheus_client import CONTENT_TYPE_LATEST
 from fastapi.responses import Response
 import time
 
-router1 = FastAPI()
+from routers.router1 import router1
+
+router2 = FastAPI()
 
 REQUEST_COUNT = Counter('balance_request_count', 'Количество запросов, обработанных балансировщиком')
 REQUEST_LATENCY = Histogram('balance_request_latency_seconds', 'Задержка обработки запросов балансировщиком')
@@ -23,7 +25,7 @@ servers = [
 current_server = 0
 
 
-@router1.get("/metrics")
+@router2.get("/metrics")
 async def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
@@ -35,7 +37,7 @@ def get_next_server():
     return server
 
 
-@router1.post("/send")
+@router2.post("/send")
 async def balance_request(data: dict):
     next_server = get_next_server()
     REQUEST_COUNT.inc()
@@ -48,7 +50,7 @@ async def balance_request(data: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router1.get("/getPublicKey")
+@router2.get("/getPublicKey")
 async def getPublicKey():
     async with httpx.AsyncClient() as client:
         response = await client.get("http://127.0.0.1:5001/getPublicKey")
@@ -60,7 +62,7 @@ async def getPublicKey():
             print(f"Ошибка получения публичного ключа: {response.status_code}")
             return None
 
-@router1.post("/sendData")
+@router2.post("/sendData")
 async def sendData(public_key, data):
     encrypted_data = rsa.encrypt(json.dumps(data).encode(), public_key)
     url = "http://127.0.0.1:5001/getData"
@@ -73,4 +75,4 @@ async def sendData(public_key, data):
 
 
 if __name__ == '__main__':
-    uvicorn.run(router1, host="0.0.0.0", port=5000)
+    uvicorn.run(router2, host="0.0.0.0", port=5001)
