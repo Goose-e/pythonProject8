@@ -20,6 +20,8 @@ servers = [
     'http://localhost:8002'
 ]
 
+current_server = 0
+
 
 @router1.get("/metrics")
 async def metrics():
@@ -35,10 +37,9 @@ def get_next_server():
 
 @router1.post("/send")
 async def balance_request(data: dict):
-    next_server = get_next_server()  # Выбираем следующий сервер
-    REQUEST_COUNT.inc()  # Увеличиваем счётчик запросов
-    start_time = time.time()  # Время начала запроса для измерения задержки
-
+    next_server = get_next_server()
+    REQUEST_COUNT.inc()
+    start_time = time.time()
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(f"{next_server}/process", json=data)
@@ -48,25 +49,28 @@ async def balance_request(data: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-def getPublicKey():
-    response = httpx.get("http://127.0.0.1:5001/getPublicKey")
-    if response.status_code == 200:
-        publicKeyUnmade = response.json()["public_key"]
-        publicKey = rsa.PublicKey.load_pkcs1(publicKeyUnmade.encode('utf-8'))
-        return publicKey
-    else:
-        print(f"Ошибка получения публичного ключа: {response.status_code}")
-        return None
+async def getPublicKey():
+    async with httpx.AsyncClient() as client:
+        response = await client.get("http://127.0.0.1:5001/getPublicKey")
+        if response.status_code == 200:
+            publicKeyUnmade = response.json()["public_key"]
+            publicKey = rsa.PublicKey.load_pkcs1(publicKeyUnmade.encode('utf-8'))
+            return publicKey
+        else:
+            print(f"Ошибка получения публичного ключа: {response.status_code}")
+            return None
 
 
-def sendData(public_key, data):
+async def sendData(public_key, data):
     encrypted_data = rsa.encrypt(json.dumps(data).encode(), public_key)
     url = "http://127.0.0.1:5001/getData"
-    response = httpx.post(url, content=encrypted_data)
-    if response.status_code == 200:
-        print("Ok")
-    else:
-        print(f"Ошибка отправки данных: {response.status_code}")
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, json=encrypted_data)
+        if response.status_code == 200:
+            print("Ok")
+        else:
+            print(f"Ошибка отправки данных: {response.status_code}")
+
 
 if __name__ == '__main__':
     uvicorn.run(router1, host="0.0.0.0", port=5000)
