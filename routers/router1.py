@@ -1,8 +1,9 @@
 import json
 from ctypes import windll
+import asyncio
 import rsa
 import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 import uvicorn
 from prometheus_client import Counter, Histogram, generate_latest
 from prometheus_client import CONTENT_TYPE_LATEST
@@ -48,7 +49,7 @@ async def balance_request(data: dict):
 @router1.get("/getPublicKey")
 async def getPublicKey():
     async with httpx.AsyncClient() as client:
-        response = await client.get("http://127.0.0.1:5001/getPublicKey")
+        response = await client.get("http://127.0.0.1:5010/getPublicKey")
         if response.status_code == 200:
             publicKeyUnmade = response.json()["public_key"]
             publicKey = rsa.PublicKey.load_pkcs1(publicKeyUnmade.encode('utf-8'))
@@ -60,14 +61,23 @@ async def getPublicKey():
 @router1.post("/sendData")
 async def sendData(public_key, data):
     encrypted_data = rsa.encrypt(json.dumps(data).encode(), public_key)
-    url = "http://127.0.0.1:5001/getData"
+    url = "http://127.0.0.1:5010/getData"
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=encrypted_data)
+        response = await client.post(url, data=encrypted_data)
         if response.status_code == 200:
             print("Ok")
         else:
             print(f"Ошибка отправки данных: {response.status_code}")
 
+@router1.post("/getData")
+async def decode(request: Request):
+    data = await request.body()
+    userData = json.loads(data.decode())
+    publicKey = await getPublicKey()
+    if publicKey is not None:
+        await sendData(publicKey, userData)
+
 
 if __name__ == '__main__':
-    uvicorn.run(router1, host="0.0.0.0", port=5000)
+    uvicorn.run(router1, host="0.0.0.0", port=5020)
+

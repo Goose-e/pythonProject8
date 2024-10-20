@@ -2,6 +2,16 @@ import httpx
 import json
 import rsa
 
+
+url = "http://127.0.0.1:5020/getData"
+response = httpx.post(url, data=json.dumps({"message":"мой номер паспорта 4044-528828"}))
+if response.status_code == 200:
+    print("Ok")
+else:
+    print(f"Ошибка отправки данных: {response.status_code}")
+
+
+
 '''
 def getPublicKey():
     response = httpx.get("http://127.0.0.1:5001/getPublicKey")
