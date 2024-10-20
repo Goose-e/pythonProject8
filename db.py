@@ -34,7 +34,7 @@ class DaBa:
                        );
                    """)
                 await cur.execute("ALTER TABLE admin OWNER TO hackaton_admin;")
-                await cur.execute("GRANT ALL PRIVILEGES ON DATABASE Hackaton TO hackaton_admin;")
+                await cur.execute("GRANT ALL PRIVILEGES ON DATABASE hackaton TO hackaton_admin;")
                 await conn.commit()
 
     async def add_admin(self, login, password):

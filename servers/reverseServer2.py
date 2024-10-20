@@ -49,6 +49,6 @@ async def proxy(request: Request):
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
     asyncio.run(startDb())
-    uvicorn.run("reverseServer:servApp", host="127.0.0.1", port=portS2, reload=True)
+    uvicorn.run("reverseServer2:servApp", host="127.0.0.1", port=portS2, reload=True)
 
 
