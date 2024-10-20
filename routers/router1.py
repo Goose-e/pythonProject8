@@ -9,7 +9,7 @@ from prometheus_client import CONTENT_TYPE_LATEST
 from fastapi.responses import Response
 import time
 from metrics import REQUEST_COUNT, REQUEST_LATENCY
-from config import servers
+from consts import servers
 router1 = FastAPI()
 
 

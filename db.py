@@ -2,7 +2,7 @@ import psycopg
 from psycopg_pool import AsyncConnectionPool
 import idGenerator
 import models.Admin
-from config import *
+from consts import *
 from models.Admin import Admin
 
 asyncConnectionPool = None
