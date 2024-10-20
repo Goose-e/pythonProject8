@@ -5,12 +5,10 @@ from prometheus_client import CONTENT_TYPE_LATEST
 from fastapi.responses import Response
 import time
 
-
 router1 = FastAPI
 
 REQUEST_COUNT = Counter('balance_request_count', 'Количество запросов, обработанных балансировщиком')
 REQUEST_LATENCY = Histogram('balance_request_latency_seconds', 'Задержка обработки запросов балансировщиком')
-
 
 servers = [
     'http://localhost:'
@@ -18,9 +16,18 @@ servers = [
     'http://localhost:'
 ]
 
+
 @router1.get("/metrics")
 async def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
+def get_next_server():
+    global current_server
+    server = servers[current_server]
+    current_server = (current_server + 1) % len(servers)
+    return server
+
 
 @router1.post("/send")
 async def balance_request(data: dict):
@@ -39,4 +46,5 @@ async def balance_request(data: dict):
 
 if __name__ == '__main__':
     import uvicorn
+
     uvicorn.run(router1, host="0.0.0.0", port=8000)
