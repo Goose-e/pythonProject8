@@ -8,13 +8,9 @@ from prometheus_client import Counter, Histogram, generate_latest
 from prometheus_client import CONTENT_TYPE_LATEST
 from fastapi.responses import Response
 import time
-
-from routers.router1 import router1
+from metrics import REQUEST_COUNT, REQUEST_LATENCY
 
 router2 = FastAPI()
-
-REQUEST_COUNT = Counter('balance_request_count', 'Количество запросов, обработанных балансировщиком')
-REQUEST_LATENCY = Histogram('balance_request_latency_seconds', 'Задержка обработки запросов балансировщиком')
 
 servers = [
     'http://localhost:8000',
@@ -50,6 +46,7 @@ async def balance_request(data: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router2.get("/getPublicKey")
 async def getPublicKey():
     async with httpx.AsyncClient() as client:
@@ -61,6 +58,7 @@ async def getPublicKey():
         else:
             print(f"Ошибка получения публичного ключа: {response.status_code}")
             return None
+
 
 @router2.post("/sendData")
 async def sendData(public_key, data):
