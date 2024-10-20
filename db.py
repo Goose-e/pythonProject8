@@ -1,6 +1,7 @@
 import psycopg
 from psycopg_pool import AsyncConnectionPool
 import idGenerator
+import models.Admin
 from config import *
 from models.Admin import Admin
 
@@ -137,24 +138,12 @@ class DaBa:
             print(f"Error: ", ex)
             return None
 
-    async def fi(self, id):
+    async def saveAdminInDB(self, admin: models.Admin.Admin):
         try:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
                     await cursor.execute(
-                        f"SELECT u.user_id, u.secret_info FROM user_info u WHERE user_id ={id}")
-                    result = await cursor.fetchall()
-                    return result
-        except Exception as ex:
-            print(f"Error: ", ex)
-            return
-
-    async def saveAdminInDB(self, userId, secretInfo):
-        try:
-            async with await get_conn() as conn:
-                async with conn.cursor() as cursor:
-                    await cursor.execute(
-                        f"INSERT INTO public.user_info (user_info_id, user_id, secret_info) VALUES ({idGenerator.generationId()},{userId},{secretInfo})")
+                        f"INSERT INTO public.admin (admin_id, admin_login, admin_password) VALUES ({idGenerator.generationId()},{admin.adminLogin},{admin.adminPassword})")
                     result = "Данные сохранены"
                     return result
         except Exception as ex:
