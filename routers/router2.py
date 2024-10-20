@@ -41,13 +41,11 @@ def encrypt_data(data, public_key):
         'tag': base64.b64encode(tag).decode()
     }
 
-
 def get_next_server():
     global current_server
     server = servers[current_server]
     current_server = (current_server + 1) % len(servers)
     return server
-
 
 @router1.post("/send")
 async def balance_request(data: dict):
@@ -63,11 +61,9 @@ async def balance_request(data: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 cached_public_key = None
 cache_time = None
 cache_duration = 60  # Кэшировать на 60 секунд
-
 
 @router1.get("/getPublicKey")
 async def getPublicKey():
@@ -90,7 +86,6 @@ async def getPublicKey():
             print(f"Ошибка получения публичного ключа: {response.status_code}")
             return None
 
-
 @router1.post("/sendData")
 async def sendData(public_key, data):
     encrypted_data = encrypt_data(data, public_key)
@@ -103,7 +98,6 @@ async def sendData(public_key, data):
             print("Ok")
         else:
             print(f"Ошибка отправки данных: {response.status_code}")
-
 
 @router1.post("/getData")
 async def decode(request: Request):

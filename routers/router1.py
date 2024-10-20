@@ -48,7 +48,6 @@ def get_next_server():
     current_server = (current_server + 1) % len(servers)
     return server
 
-
 @router1.post("/send")
 async def balance_request(data: dict):
     next_server = get_next_server()
@@ -62,7 +61,6 @@ async def balance_request(data: dict):
             return response.json()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 cached_public_key = None
 cache_time = None

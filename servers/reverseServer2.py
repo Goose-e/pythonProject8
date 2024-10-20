@@ -55,7 +55,7 @@ async def saveInfoInDB(userData):
     except Exception as ex:
         print(f"Ошибка при сохранении информации: {ex}")
 
-
+#или тута
 @servApp.post("/getData")
 async def decode(request: Request):
     encryptedData = await request.json()
@@ -90,7 +90,7 @@ async def proxy(request: Request):
         print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
     return "ok"
 
-
+#возможно ошибка тут
 def decrypt_data(encrypted_data: dict, private_key: rsa.PrivateKey):
     try:
         encrypted_key = base64.b64decode(encrypted_data['encrypted_key'])

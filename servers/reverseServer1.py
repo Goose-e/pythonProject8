@@ -19,8 +19,6 @@ from db import  DaBa
 
 servApp = FastAPI()
 
-
-
 async def lifespan(scope, receive, send):
     if scope['type'] == 'lifespan':
         global dataBase
@@ -36,17 +34,14 @@ async def lifespan(scope, receive, send):
             await db.close_pool()
             await send({"type": "lifespan.shutdown.complete"})  # Сообщаем о завершении остановки
 
-
 servApp.router.lifespan = lifespan
 
 (publicKey, privateKey) = rsa.newkeys(2048)
-
 
 @servApp.get("/getPublicKey")
 async def get_public_key():
     publicKeyUnmade = publicKey.save_pkcs1(format='PEM')
     return {"public_key": publicKeyUnmade.decode('utf-8')}
-
 
 async def saveInfoInDB(userData):
     try:
