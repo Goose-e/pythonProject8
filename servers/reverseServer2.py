@@ -66,7 +66,6 @@ async def decode(request: Request):
         # messageUserData=userData
         if isinstance(userData, bytes):
             userData = userData.decode('utf-8')
-
             userData = json.loads(userData)
         print(f"Расшифрованные данные: {userData}")
         await saveInfoInDB(userData)
@@ -90,14 +89,14 @@ async def proxy(request: Request):
         print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
     return "ok"
 
-#возможно ошибка тут
+
 def decrypt_data(encrypted_data: dict, private_key: rsa.PrivateKey):
     try:
         encrypted_key = base64.b64decode(encrypted_data['encrypted_key'])
         ciphertext = base64.b64decode(encrypted_data['ciphertext'])
         nonce = base64.b64decode(encrypted_data['nonce'])
         tag = base64.b64decode(encrypted_data['tag'])
-        aes_key = rsa.decrypt(encrypted_key, private_key)
+        aes_key = rsa.decrypt(encrypted_key, private_key)#тут ошибка
         cipher_aes = AES.new(aes_key, AES.MODE_EAX, nonce=nonce)
         data = cipher_aes.decrypt_and_verify(ciphertext, tag)
         return json.loads(data.decode('utf-8'))
