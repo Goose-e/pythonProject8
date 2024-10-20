@@ -1,6 +1,6 @@
 import asyncio
 from asyncio import WindowsSelectorEventLoopPolicy
-
+import rsa
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 import httpx
@@ -17,44 +17,37 @@ async def startDb():
     await initialize_pool()
 
 
+(publicKey, privateKey) = rsa.newkeys(1024)
+
+@servApp.get("/getPublicKey")
+async def get_public_key():
+    publicKeyUnmade = publicKey.save_pkcs1(format='PEM')
+    return {"public_key": publicKeyUnmade.decode('utf-8')}
+
+@servApp.post("/getData")
+async def decode(request: Request):
+    encryptedData = await request.body()
+    try:
+        decryptedData = rsa.decrypt(encryptedData, privateKey)
+        userData = json.loads(decryptedData.decode())
+        async with httpx.AsyncClient(verify='SSL/cert.pem') as client:
+            response = await client.post("http://127.0.0.1:5001/proxy/", json=userData)
+        return "Отправлено"
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@servApp.post("/proxy/")
+async def proxy(request: Request):
+    data = await request.json()
+    print(data)
+    async with httpx.AsyncClient(verify='SSL/cert.pem') as client:
+        response = await client.post("https://127.0.0.1:5000/userPingTest", data=json.dumps(data))
+    return "ok"
+
+
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
     asyncio.run(startDb())
     uvicorn.run("reverseServer:servApp", host="127.0.0.1", port=5001, reload=True)
 
 
-@servApp.post("/proxy/")
-async def proxy(request: Request):
-    data = await request.json()
-    if "name" and "email" and "age" in list(data.keys()):
-        async with httpx.AsyncClient(verify='SSL/cert.pem') as client:
-            response = await client.post("https://127.0.0.1:5000/userPingTest", json=data)
-        return "ok"
-    else:
-        print("данный метод пока не разработан")
-
-
-client = TestClient(servApp)
-
-'''
-def ping():
-    while True:
-        time.sleep(5)
-        try:
-            response=client.post("/proxy/", json={"ping":"ping"})
-        except:
-            print("ping 0")
-            continue
-        else:
-            print("ping 1")
-            break
-
-def test_proxy():
-    response = client.post("/proxy/", json={'go':'52'})
-    assert response.status_code == 200
-    print(response)
-
-while True:
-    ping()
-    #time.sleep(5)
-    '''

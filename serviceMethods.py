@@ -20,5 +20,6 @@ def ping():
 def userPing():
     if request.method == 'POST':
         form = json.loads(request.data.decode())
-        print(form['name'],form['email'],form['age'])
+        for i in form.keys():
+            print(i)
         return "Запрос прошел"
