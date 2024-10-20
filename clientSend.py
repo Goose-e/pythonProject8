@@ -1,51 +1,16 @@
+import time
+
 import httpx
 import json
 import rsa
 
 url = "http://127.0.0.1:5020/getData"
-response = httpx.post(url, json=json.dumps({
-                                               "message": "мой нопыилрдвпфооофжлдвтыидоцуйоцшвьысвмиолвапршкоыьм ьивпокцалдвьмтиолчпрыпелкадвсбьм стиолпрлпыдамсб мьитсаорплвщыадямбсьит мой адресс г.Минк ул пупкина 15 мер паспорта 4044-528828"}))
-if response.status_code == 200:
-    print("Ok")
-else:
-    print(f"Ошибка отправки данных: {response.status_code}")
 
-# def test():
-#     url = "http://127.0.0.1:5020/getData"
-#     response = httpx.post(url, json=json.dumps({"message": "мой нопыилрдвпфооофжлдвтыидоцуйоцшвьысвмиолвапршкоыьм ьивпокцалдвьмтиолчпрыпелкадвсбьм стиолпрлпыдамсб мьитсаорплвщыадямбсьит мой адресс г.Минк ул пупкина 15 мер паспорта 4044-528828"}))
-#     if response.status_code == 200:
-#         print("Ok")
-#     else:
-#         print(f"Ошибка отправки данных: {response.status_code}")
-# test()
-'''
-def getPublicKey():
-    response = httpx.get("http://127.0.0.1:5001/getPublicKey")
-    if response.status_code == 200:
-        publicKeyUnmade = response.json()["public_key"]
-        publicKey = rsa.PublicKey.load_pkcs1(publicKeyUnmade.encode('utf-8'))
-        return publicKey
-    else:
-        print(f"Ошибка получения публичного ключа: {response.status_code}")
-        return None
+while True:
+    with open("jsonData/data.log", "r", encoding="utf-8") as file:
+        for line in file:
+            data = json.loads(line)
+            response = httpx.post(url, json=data)
+            print(f"Отправлено: {data}, Ответ: {response.status_code}")
+            time.sleep(4)
 
-
-def sendData(public_key, data):
-    encrypted_data = rsa.encrypt(json.dumps(data).encode(), public_key)
-    url = "http://127.0.0.1:5001/getData"
-    response = httpx.post(url, content=encrypted_data)
-    if response.status_code == 200:
-        print("Ok")
-    else:
-        print(f"Ошибка отправки данных: {response.status_code}")
-
-if __name__ == "__main__":
-    publicKey = getPublicKey()
-
-    if publicKey:
-        userData = {
-            "name": "John Doe",
-            "email": "john@example.com",
-            "age": 30
-        }
-        sendData(publicKey, userData)'''

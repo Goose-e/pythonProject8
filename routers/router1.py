@@ -92,6 +92,7 @@ async def decode(request: Request):
     data = await request.body()
     try:
         encrypted_data = json.loads(data.decode())
+        print(encrypted_data['Message'])
     except json.JSONDecodeError:
         return {"status": "error", "message": "Invalid JSON"}
     publicKey = await getPublicKey()

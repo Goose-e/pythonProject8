@@ -34,17 +34,18 @@ async def get_public_key():
 
 @servApp.post("/getData")
 async def decode(request: Request):
-    print("Вызван метод decode")  # Вывод сообщения
-    encryptedData = await request.json()  # Вывод входящих данных
+    encryptedData = await request.json()
     try:
-        userData =  decrypt_data(encryptedData, privateKey)
-        # Проверяем, нужно ли декодировать
+        print(encryptedData)
+        userData = decrypt_data(encryptedData, privateKey)
+        print(userData)
+        #messageUserData=userData
         if isinstance(userData, bytes):
             userData = userData.decode('utf-8')
             userData = json.loads(userData)
         print(f"Расшифрованные данные: {userData}")
         async with httpx.AsyncClient() as client:
-            response = await client.post("http://127.0.0.1:5010/proxy/", data=userData)
+            response = await client.post("http://127.0.0.1:5010/proxy/", json=json.dumps(userData['Message']))
             print(f"Ответ от proxy: {response.status_code}, {response.text}")
         return "Отправлено"
     except Exception as e:
@@ -55,7 +56,7 @@ async def decode(request: Request):
 @servApp.post("/proxy/")
 async def proxy(request: Request):
     data = await request.json()
-    data = data["message"]
+    data=json.loads(data)
     data = Masking().maskData(data)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
