@@ -8,6 +8,7 @@ import json
 import uvicorn
 import time
 
+from consts import portS3
 from db import initialize_pool
 
 servApp = FastAPI()
@@ -48,6 +49,6 @@ async def proxy(request: Request):
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
     asyncio.run(startDb())
-    uvicorn.run("reverseServer:servApp", host="127.0.0.1", port=5012, reload=True)
+    uvicorn.run("reverseServer:servApp", host="127.0.0.1", port=portS3, reload=True)
 
 

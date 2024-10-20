@@ -9,7 +9,8 @@ from prometheus_client import CONTENT_TYPE_LATEST
 from fastapi.responses import Response
 import time
 from metrics import REQUEST_COUNT, REQUEST_LATENCY
-from consts import servers
+from consts import servers, portR1
+
 router1 = FastAPI()
 
 
@@ -67,4 +68,4 @@ async def sendData(public_key, data):
 
 
 if __name__ == '__main__':
-    uvicorn.run(router1, host="0.0.0.0", port=4000)
+    uvicorn.run(router1, host="0.0.0.0", port=portR1)
