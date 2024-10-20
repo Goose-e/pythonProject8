@@ -2,7 +2,7 @@ import httpx
 import json
 import rsa
 
-
+'''
 def getPublicKey():
     response = httpx.get("http://127.0.0.1:5001/getPublicKey")
     if response.status_code == 200:
@@ -32,4 +32,4 @@ if __name__ == "__main__":
             "email": "john@example.com",
             "age": 30
         }
-        sendData(publicKey, userData)
+        sendData(publicKey, userData)'''
