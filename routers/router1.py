@@ -8,15 +8,15 @@ from prometheus_client import CONTENT_TYPE_LATEST
 from fastapi.responses import Response
 import time
 
-router1 = FastAPI
+router1 = FastAPI()
 
 REQUEST_COUNT = Counter('balance_request_count', 'Количество запросов, обработанных балансировщиком')
 REQUEST_LATENCY = Histogram('balance_request_latency_seconds', 'Задержка обработки запросов балансировщиком')
 
 servers = [
-    'http://localhost:'
-    'http://localhost:'
-    'http://localhost:'
+    'http://localhost:8000'
+    'http://localhost:8001'
+    'http://localhost:8002'
 ]
 
 
