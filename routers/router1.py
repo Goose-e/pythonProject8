@@ -1,6 +1,6 @@
 import json
 from ctypes import windll
-
+import rsa
 import httpx
 from fastapi import FastAPI, HTTPException
 import uvicorn
@@ -61,11 +61,11 @@ def getPublicKey():
 
 def sendData(public_key, data):
     encrypted_data = rsa.encrypt(json.dumps(data).encode(), public_key)
-    son.dumps(data).encode(), public_key)
     url = "http://127.0.0.1:5001/getData"
     response = httpx.post(url, content=encrypted_data)
     if response.status_code == 200:
-        print("Ok")    else:
+        print("Ok")
+    else:
         print(f"Ошибка отправки данных: {response.status_code}")
 
 if __name__ == '__main__':
