@@ -1,3 +1,4 @@
+import json
 from ctypes import windll
 
 import httpx
@@ -47,5 +48,25 @@ async def balance_request(data: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+def getPublicKey():
+    response = httpx.get("http://127.0.0.1:5001/getPublicKey")
+    if response.status_code == 200:
+        publicKeyUnmade = response.json()["public_key"]
+        publicKey = rsa.PublicKey.load_pkcs1(publicKeyUnmade.encode('utf-8'))
+        return publicKey
+    else:
+        print(f"Ошибка получения публичного ключа: {response.status_code}")
+        return None
+
+
+def sendData(public_key, data):
+    encrypted_data = rsa.encrypt(json.dumps(data).encode(), public_key)
+    son.dumps(data).encode(), public_key)
+    url = "http://127.0.0.1:5001/getData"
+    response = httpx.post(url, content=encrypted_data)
+    if response.status_code == 200:
+        print("Ok")    else:
+        print(f"Ошибка отправки данных: {response.status_code}")
+
 if __name__ == '__main__':
-    uvicorn.run(router1, host="0.0.0.0", port=8000)
+    uvicorn.run(router1, host="0.0.0.0", port=5000)
