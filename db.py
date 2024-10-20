@@ -19,11 +19,10 @@ async def initialize_pool():
 
 class DaBa:
     def __init__(self):
-        self.con = psycopg.connect(
-            dbname=dbConst,
-            user=user,  # Имя пользователя для подключения к базе данных
-            password=password,  # Пароль пользователя
-            host=host
+        self.con = AsyncConnectionPool(
+            f"dbname={dbConst} user={user} password='{password}' host='{host}'",
+            min_size=1,
+            max_size=10,
         )
         self.cur = self.con.cursor()
 
@@ -126,7 +125,6 @@ if __name__ == "__main__":
     manager.create_database(f'{dbConst}')
     manager.create_user(f'{user}', f'{password}')
     manager.grant_privileges(f'{user}', f'{dbConst}')
-
     db = DaBa()
     db.create_admin_table()
     db.add_admin('admin_login', 'admin_password')
