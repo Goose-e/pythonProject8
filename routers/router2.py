@@ -13,8 +13,6 @@ from consts import servers, portR2
 
 router2 = FastAPI()
 
-
-
 current_server = 0
 
 

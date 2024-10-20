@@ -65,15 +65,21 @@ class Masking():
             [А-Я]{2}[-\s]?\d{8}\b               # Другие форматы дипломов
         """, re.VERBOSE)
 
-        text = phone_pattern.sub("***", text)
-        text = passport_pattern.sub("***", text)
-        text = card_pattern.sub("***", text)
-        text = account_pattern.sub("***", text)
-        text = date_pattern.sub("***", text)
-        text = name_pattern.sub("***", text)
-        text = address_pattern.sub("***", text)
-        text = reg_num_pattern.sub("***", text)
-        text = diploma_pattern.sub("***", text)
+        def find_and_replace(pattern, text):
+            matches = pattern.findall(text)  # Найти все совпадения
+            text = pattern.sub("***", text)  # Заменить все совпадения на ***
+            return text
+
+        # Обработка каждого шаблона
+        text = find_and_replace(phone_pattern, text)
+        text = find_and_replace(passport_pattern, text)
+        text = find_and_replace(card_pattern, text)
+        text = find_and_replace(account_pattern, text)
+        text = find_and_replace(date_pattern, text)
+        text = find_and_replace(name_pattern, text)
+        text = find_and_replace(address_pattern, text)
+        text = find_and_replace(reg_num_pattern, text)
+        text = find_and_replace(diploma_pattern, text)
 
         def maskRemainingDigits(text):
             text = re.sub(r'\b\d{4,}\b', '***', text)
@@ -83,6 +89,8 @@ class Masking():
         text = maskRemainingDigits(text)
 
         return text
+
+
 '''
 test_texts = [
     "Меня зовут Анна Иванова, мой номер паспорта 4044-528828, а номер карты 5773-2909-7067-8674. Дата рождения: 25 MAY 1982.",
