@@ -1,19 +1,23 @@
+import json
+from ctypes import windll
+
+import httpx
 from fastapi import FastAPI, HTTPException
-import requests
+import uvicorn
 from prometheus_client import Counter, Histogram, generate_latest
 from prometheus_client import CONTENT_TYPE_LATEST
 from fastapi.responses import Response
 import time
 
-router1 = FastAPI
+router1 = FastAPI()
 
 REQUEST_COUNT = Counter('balance_request_count', 'Количество запросов, обработанных балансировщиком')
 REQUEST_LATENCY = Histogram('balance_request_latency_seconds', 'Задержка обработки запросов балансировщиком')
 
 servers = [
-    'http://localhost:'
-    'http://localhost:'
-    'http://localhost:'
+    'http://localhost:8000'
+    'http://localhost:8001'
+    'http://localhost:8002'
 ]
 
 
@@ -36,15 +40,33 @@ async def balance_request(data: dict):
     start_time = time.time()  # Время начала запроса для измерения задержки
 
     try:
-        # Отправляем данные на выбранный сервер
-        response = requests.post(f"{next_server}/process", json=data)
-        REQUEST_LATENCY.observe(time.time() - start_time)  # Измеряем задержку и записываем её
-        return response.json()  # Возвращаем ответ от сервера клиенту
+        async with httpx.AsyncClient() as client:
+            response = await client.post(f"{next_server}/process", json=data)
+            REQUEST_LATENCY.observe(time.time() - start_time)
+            return response.json()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-if __name__ == '__main__':
-    import uvicorn
+def getPublicKey():
+    response = httpx.get("http://127.0.0.1:5001/getPublicKey")
+    if response.status_code == 200:
+        publicKeyUnmade = response.json()["public_key"]
+        publicKey = rsa.PublicKey.load_pkcs1(publicKeyUnmade.encode('utf-8'))
+        return publicKey
+    else:
+        print(f"Ошибка получения публичного ключа: {response.status_code}")
+        return None
 
-    uvicorn.run(router1, host="0.0.0.0", port=8000)
+
+def sendData(public_key, data):
+    encrypted_data = rsa.encrypt(json.dumps(data).encode(), public_key)
+    son.dumps(data).encode(), public_key)
+    url = "http://127.0.0.1:5001/getData"
+    response = httpx.post(url, content=encrypted_data)
+    if response.status_code == 200:
+        print("Ok")    else:
+        print(f"Ошибка отправки данных: {response.status_code}")
+
+if __name__ == '__main__':
+    uvicorn.run(router1, host="0.0.0.0", port=5000)
