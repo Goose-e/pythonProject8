@@ -6,7 +6,7 @@ from config import *
 asyncConnectionPool = None
 
 
-# Инициализация пула асинхронных подключений
+
 async def initialize_pool():
     global asyncConnectionPool
     asyncConnectionPool = AsyncConnectionPool(
@@ -26,7 +26,6 @@ class DaBa:
         )
         self.cur = self.con.cursor()
 
-    # Создание таблицы admin
     def create_admin_table(self):
         self.cur.execute('DROP TABLE IF EXISTS "admin";')
         self.cur.execute("""
@@ -40,7 +39,6 @@ class DaBa:
         self.cur.execute("GRANT ALL PRIVILEGES ON DATABASE Hackaton TO hackaton_admin;")
         self.con.commit()
 
-    # Добавление администратора
     def add_admin(self, login, password):
         self.cur.execute(
             "INSERT INTO admin (admin_id, admin_login, admin_password) VALUES (%s, %s, %s)",
@@ -48,7 +46,6 @@ class DaBa:
         )
         self.con.commit()
 
-    # Создание таблицы user_info
     def create_user_table(self):
         self.cur.execute(f"""
           DROP TABLE IF EXISTS {dbConst};
@@ -68,7 +65,6 @@ class DaBa:
 
 class UserManager:
     def __init__(self):
-        # Подключение к системной базе данных 'postgres' для управления пользователями
         self.con = psycopg.connect(
             dbname='postgres',  # Подключение к системной базе данных
             user='postgres',  # Имя суперпользователя
@@ -77,14 +73,12 @@ class UserManager:
         )
         self.cur = self.con.cursor()
 
-    # Создание или замена пользователя
     def create_user(self, username, user_password):
         self.cur.execute(f"DROP ROLE IF EXISTS {username};")
         self.cur.execute(f"CREATE ROLE {username} WITH LOGIN PASSWORD '{user_password}';")
         self.cur.execute(f"ALTER ROLE {username} CREATEDB;")
         self.con.commit()
 
-    # Назначение привилегий пользователю
     def grant_privileges(self, username, database):
         self.cur.execute(f"GRANT ALL PRIVILEGES ON DATABASE {database} TO {username};")
         self.cur.execute(f"GRANT CREATE ON SCHEMA public TO {username};")
@@ -118,7 +112,7 @@ async def get_conn():
     return conn
 
 
-# Пример использования
+
 if __name__ == "__main__":
     superUserPassword = "Kolos213"
     manager = UserManager()
