@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Admin:
+class userInfo:
     userInfoId: int
     userId: int
     secretInfo: str

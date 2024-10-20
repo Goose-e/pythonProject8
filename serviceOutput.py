@@ -1,6 +1,7 @@
 from flask import Flask, g
 from flask_talisman import Talisman
 
+from consts import portC1
 from serviceMethods import MethBP
 
 siteApp = Flask(__name__, static_folder="www/files", template_folder="www")
@@ -12,7 +13,7 @@ Talisman(siteApp, force_https=True, strict_transport_security=True, strict_trans
 
 
 def start_app():
-    siteApp.run(ssl_context=('SSL/cert.pem', 'SSL/key.pem'), host="0.0.0.0", port=5000, debug=True)
+    siteApp.run(ssl_context=('SSL/cert.pem', 'SSL/key.pem'), host="0.0.0.0", port=portC1, debug=True)
 
 
 siteApp.register_blueprint(MethBP)
