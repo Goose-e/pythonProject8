@@ -8,6 +8,7 @@ import json
 import uvicorn
 import time
 
+import consts
 from consts import portS1
 from maskMethods import Masking
 
@@ -47,7 +48,7 @@ async def proxy(request: Request):
     print(data)
     data = Masking().maskData(data)
     print(data)
-    async with httpx.AsyncClient(verify='SSL/cert.pem') as client:
+    async with httpx.AsyncClient(verify=consts.cert_path) as client:
         response = await client.post("https://127.0.0.1:5000/userPingTest", data=json.dumps(data))
     return "ok"
 

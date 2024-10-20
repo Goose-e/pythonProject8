@@ -4,7 +4,7 @@ import rsa
 
 
 url = "http://127.0.0.1:5020/getData"
-response = httpx.post(url, data=json.dumps({"message":"мой номер паспорта 4044-528828"}))
+response = httpx.post(url, data=json.dumps({"message":"мой нопыилрдвпфооофжлдвтыидоцуйоцшвьысвмиолвапршкоыьм ьивпокцалдвьмтиолчпрыпелкадвсбьм стиолпрлпыдамсб мьитсаорплвщыадямбсьит мой адресс г.Минк ул пупкина 15 мер паспорта 4044-528828"}))
 if response.status_code == 200:
     print("Ok")
 else:
