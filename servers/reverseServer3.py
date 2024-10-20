@@ -9,25 +9,20 @@ import uvicorn
 import time
 
 from db import initialize_pool
-from db import DaBa
 
 servApp = FastAPI()
-db = None
 
 
 async def startDb():
     await initialize_pool()
-    db = DaBa()
 
 
 (publicKey, privateKey) = rsa.newkeys(1024)
-
 
 @servApp.get("/getPublicKey")
 async def get_public_key():
     publicKeyUnmade = publicKey.save_pkcs1(format='PEM')
     return {"public_key": publicKeyUnmade.decode('utf-8')}
-
 
 @servApp.post("/getData")
 async def decode(request: Request):
@@ -41,7 +36,6 @@ async def decode(request: Request):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-
 @servApp.post("/proxy/")
 async def proxy(request: Request):
     data = await request.json()
@@ -54,4 +48,6 @@ async def proxy(request: Request):
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
     asyncio.run(startDb())
-    uvicorn.run("reverseServer:servApp", host="127.0.0.1", port=5001, reload=True)
+    uvicorn.run("reverseServer:servApp", host="127.0.0.1", port=5012, reload=True)
+
+
