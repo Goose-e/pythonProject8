@@ -2,9 +2,9 @@ import psycopg
 from psycopg_pool import AsyncConnectionPool
 import idGenerator
 from config import *
+from models.Admin import Admin
 
 asyncConnectionPool = None
-
 
 
 async def initialize_pool():
@@ -19,34 +19,33 @@ async def initialize_pool():
 
 class DaBa:
     def __init__(self):
-        self.con = AsyncConnectionPool(
-            f"dbname={dbConst} user={user} password='{password}' host='{host}'",
-            min_size=1,
-            max_size=10,
-        )
-        self.cur = self.con.cursor()
+        self.con = asyncConnectionPool
 
-    def create_admin_table(self):
-        self.cur.execute('DROP TABLE IF EXISTS "admin";')
-        self.cur.execute("""
-                    CREATE TABLE "admin" (
-                        "admin_id" BIGINT NOT NULL PRIMARY KEY,
-                        "admin_login" VARCHAR(20) NOT NULL UNIQUE,
-                        "admin_password" VARCHAR(255) NOT NULL
-                    );
-                """)
-        self.cur.execute("ALTER TABLE admin OWNER TO hackaton_admin;")
-        self.cur.execute("GRANT ALL PRIVILEGES ON DATABASE Hackaton TO hackaton_admin;")
-        self.con.commit()
+    async def create_admin_table(self):
+        async with self.con.connection() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute('DROP TABLE IF EXISTS "admin";')
+                await cur.execute("""
+                       CREATE TABLE "admin" (
+                           "admin_id" BIGINT NOT NULL PRIMARY KEY,
+                           "admin_login" VARCHAR(20) NOT NULL UNIQUE,
+                           "admin_password" VARCHAR(255) NOT NULL
+                       );
+                   """)
+                await cur.execute("ALTER TABLE admin OWNER TO hackaton_admin;")
+                await cur.execute("GRANT ALL PRIVILEGES ON DATABASE Hackaton TO hackaton_admin;")
+                await conn.commit()
 
-    def add_admin(self, login, password):
-        self.cur.execute(
-            "INSERT INTO admin (admin_id, admin_login, admin_password) VALUES (%s, %s, %s)",
-            (idGenerator.generationId(), login, password)
-        )
-        self.con.commit()
+    async def add_admin(self, login, password):
+        async with self.con.connection() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    "INSERT INTO admin (admin_id, admin_login, admin_password) VALUES (%s, %s, %s)",
+                    (idGenerator.generationId(), login, password)
+                )
+                await conn.commit()
 
-    def create_user_table(self):
+    async def create_user_table(self):
         self.cur.execute(f"""
           DROP TABLE IF EXISTS {dbConst};
             CREATE TABLE user_info (
@@ -61,6 +60,106 @@ class DaBa:
             ON user_info TO hackaton_admin;
         """)
         self.con.commit()
+
+    async def getAllUsers(self):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute("SELECT u.user_id FROM user_info u")  # Замените на ваш запрос
+                    result = await cursor.fetchall()
+                    return result
+        except Exception as ex:
+            print(f"Error: ", ex)
+
+            return
+
+    async def getAllUserInfo(self):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute("SELECT u.user_id, u.secret_info FROM user_info u")
+                    result = await cursor.fetchall()
+                    return result
+        except Exception as ex:
+            print(f"Error: ", ex)
+            return
+
+    async def findUserById(self, id):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute(
+                        f"SELECT u.user_id, u.secret_info FROM user_info u WHERE user_id ={id}")
+                    result = await cursor.fetchall()
+                    return result
+        except Exception as ex:
+            print(f"Error: ", ex)
+            return
+
+    async def saveInfoInDB(self, userId, secretInfo):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute(
+                        f"INSERT INTO public.user_info (user_info_id, user_id, secret_info) VALUES ({idGenerator.generationId()},{userId},{secretInfo})")
+                    result = "Данные сохранены"
+                    return result
+        except Exception as ex:
+            print(f"Error: ", ex)
+            return
+
+    async def getAllAdmins(self):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute("SELECT a.admin_login FROM admin a")  # Замените на ваш запрос
+                    result = await cursor.fetchall()
+                    return result
+        except Exception as ex:
+            print(f"Error: ", ex)
+
+            return
+
+    async def authAdmin(self, login, password):
+        try:
+            async with self.con.connection() as conn:
+                async with conn.cursor() as cur:
+                    await cur.execute(
+                        "SELECT * FROM admin a WHERE admin_login = %s AND admin_password = %s", (login, password)
+                    )
+                    result = await cur.fetchone()
+                    if result:
+                        admin = Admin(adminId=result[0], adminLogin=result[1], adminPassword=result[2])
+                        return admin
+                    else:
+                        return None
+        except Exception as ex:
+            print(f"Error: ", ex)
+            return None
+
+    async def fi(self, id):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute(
+                        f"SELECT u.user_id, u.secret_info FROM user_info u WHERE user_id ={id}")
+                    result = await cursor.fetchall()
+                    return result
+        except Exception as ex:
+            print(f"Error: ", ex)
+            return
+
+    async def saveAdminInDB(self, userId, secretInfo):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute(
+                        f"INSERT INTO public.user_info (user_info_id, user_id, secret_info) VALUES ({idGenerator.generationId()},{userId},{secretInfo})")
+                    result = "Данные сохранены"
+                    return result
+        except Exception as ex:
+            print(f"Error: ", ex)
+            return
 
 
 class UserManager:
@@ -108,9 +207,14 @@ class UserManager:
 
 # Асинхронный метод для получения подключения
 async def get_conn():
-    conn = await asyncConnectionPool.getconn()
-    return conn
+    return await asyncConnectionPool.getconn()
 
+
+async def adCreate():
+    db = DaBa()
+    await db.create_admin_table()
+    await db.add_admin('admin_login', 'admin_password')
+    await db.create_user_table()
 
 
 if __name__ == "__main__":
@@ -119,7 +223,3 @@ if __name__ == "__main__":
     manager.create_database(f'{dbConst}')
     manager.create_user(f'{user}', f'{password}')
     manager.grant_privileges(f'{user}', f'{dbConst}')
-    db = DaBa()
-    db.create_admin_table()
-    db.add_admin('admin_login', 'admin_password')
-    db.create_user_table()
