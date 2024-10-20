@@ -2,7 +2,6 @@ import asyncio
 
 import psycopg
 from psycopg_pool import AsyncConnectionPool
-import idGenerator
 import models.Admin
 from consts import *
 from models.Admin import Admin

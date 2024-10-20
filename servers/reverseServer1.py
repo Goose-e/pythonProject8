@@ -1,6 +1,8 @@
 import asyncio
 import base64
 from asyncio import WindowsSelectorEventLoopPolicy
+from contextlib import asynccontextmanager
+
 import rsa
 from fastapi import FastAPI, Request
 from Cryptodome.Cipher import AES
@@ -10,17 +12,32 @@ import json
 import uvicorn
 import consts
 import db
-from consts import portS1
+from consts import portS1, portC1
 from maskMethods import Masking
 
-from db import initialize_pool, DaBa
+from db import  DaBa
 
 servApp = FastAPI()
 
 
-async def startDb():
-    await initialize_pool()
 
+async def lifespan(scope, receive, send):
+    if scope['type'] == 'lifespan':
+        global dataBase
+        await db.initialize_pool()
+        dataBase = DaBa()
+        await send({"type": "lifespan.startup.complete"})  # Сообщаем о завершении старта
+        try:
+            while True:
+                message = await receive()
+                if message['type'] == 'lifespan.shutdown':
+                    break
+        finally:
+            await db.close_pool()
+            await send({"type": "lifespan.shutdown.complete"})  # Сообщаем о завершении остановки
+
+
+servApp.router.lifespan = lifespan
 
 (publicKey, privateKey) = rsa.newkeys(2048)
 
@@ -32,8 +49,6 @@ async def get_public_key():
 
 
 async def saveInfoInDB(userData):
-    await db.initialize_pool()
-    dataBase = DaBa()
     try:
         result = await dataBase.saveInfoInDB(userData['UserID'], userData['Message'])
         print(result)
@@ -57,7 +72,7 @@ async def decode(request: Request):
         print(f"Расшифрованные данные: {userData}")
         await saveInfoInDB(userData)
         async with httpx.AsyncClient() as client:
-            response = await client.post("http://127.0.0.1:5010/proxy/", json=json.dumps(userData['Message']))
+            response = await client.post(f"http://127.0.0.1:{portS1}/proxy/", json=json.dumps(userData['Message']))
             print(f"Ответ от proxy: {response.status_code}, {response.text}")
         return "Отправлено"
     except Exception as e:
@@ -72,7 +87,7 @@ async def proxy(request: Request):
     data = Masking().maskData(data)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
-        response = await client.post("https://127.0.0.1:5000/userPingTest", json=json.dumps(data))
+        response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=json.dumps(data))
         print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
     return "ok"
 
@@ -93,5 +108,4 @@ def decrypt_data(encrypted_data: dict, private_key: rsa.PrivateKey):
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
-    asyncio.run(startDb())
-    uvicorn.run("reverseServer1:servApp", host="127.0.0.1", port=portS1, reload=True)
+    uvicorn.run("reverseServer1:servApp", host="127.0.0.1", port=portS1, reload=True, lifespan="on")
