@@ -1,9 +1,12 @@
+import asyncio
+
 import psycopg
 from psycopg_pool import AsyncConnectionPool
 import idGenerator
 import models.Admin
 from consts import *
 from models.Admin import Admin
+from models.UserInfo import UserInfo
 
 asyncConnectionPool = None
 
@@ -27,12 +30,12 @@ class DaBa:
             async with conn.cursor() as cur:
                 await cur.execute('DROP TABLE IF EXISTS "admin";')
                 await cur.execute("""
-                       CREATE TABLE "admin" (
-                           "admin_id" BIGINT NOT NULL PRIMARY KEY,
-                           "admin_login" VARCHAR(20) NOT NULL UNIQUE,
-                           "admin_password" VARCHAR(255) NOT NULL
-                       );
-                   """)
+                          CREATE TABLE "admin" (
+                              "admin_id" serial PRIMARY KEY,
+                              "admin_login" VARCHAR(20) NOT NULL UNIQUE,
+                              "admin_password" VARCHAR(255) NOT NULL
+                          );
+                      """)
                 await cur.execute("ALTER TABLE admin OWNER TO hackaton_admin;")
                 await cur.execute("GRANT ALL PRIVILEGES ON DATABASE hackaton TO hackaton_admin;")
                 await conn.commit()
@@ -41,26 +44,28 @@ class DaBa:
         async with self.con.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
-                    "INSERT INTO admin (admin_id, admin_login, admin_password) VALUES (%s, %s, %s)",
-                    (idGenerator.generationId(), login, password)
+                    "INSERT INTO admin (admin_login, admin_password) VALUES (%s, %s)",
+                    (login, password)
                 )
                 await conn.commit()
 
     async def create_user_table(self):
-        self.cur.execute(f"""
-          DROP TABLE IF EXISTS {dbConst};
-            CREATE TABLE user_info (
-                user_info_id BIGINT NOT NULL PRIMARY KEY,
-                user_id BIGINT NOT NULL,
-                secret_info VARCHAR
-            );
-        """)
-        self.cur.execute("ALTER TABLE user_info OWNER TO hackaton_admin;")
-        self.cur.execute("""
-            GRANT DELETE, INSERT, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE 
-            ON user_info TO hackaton_admin;
-        """)
-        self.con.commit()
+        async with self.con.connection() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(f"""
+                    DROP TABLE IF EXISTS user_info;
+                    CREATE TABLE user_info (
+                        user_info_id serial PRIMARY KEY,
+                        user_id BIGINT NOT NULL,
+                        secret_info VARCHAR
+                    );
+                """)
+                await cur.execute("ALTER TABLE user_info OWNER TO hackaton_admin;")
+                await cur.execute("""
+                    GRANT DELETE, INSERT, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE 
+                    ON user_info TO hackaton_admin;
+                """)
+                await conn.commit()
 
     async def getAllUsers(self):
         try:
@@ -102,7 +107,9 @@ class DaBa:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
                     await cursor.execute(
-                        f"INSERT INTO public.user_info (user_info_id, user_id, secret_info) VALUES ({idGenerator.generationId()},{userId},{secretInfo})")
+                        "INSERT INTO public.user_info (user_id, secret_info) VALUES (%s, %s)",
+                        (userId, secretInfo)
+                    )
                     result = "Данные сохранены"
                     return result
         except Exception as ex:
@@ -121,12 +128,13 @@ class DaBa:
 
             return
 
-    async def authAdmin(self, login, password):
+    async def authAdmin(self, admin: models.Admin.Admin):
         try:
             async with self.con.connection() as conn:
                 async with conn.cursor() as cur:
                     await cur.execute(
-                        "SELECT * FROM admin a WHERE admin_login = %s AND admin_password = %s", (login, password)
+                        "SELECT * FROM admin a WHERE admin_login = %s AND admin_password = %s",
+                        (admin.adminLogin, admin.adminPassword)
                     )
                     result = await cur.fetchone()
                     if result:
@@ -143,7 +151,7 @@ class DaBa:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
                     await cursor.execute(
-                        f"INSERT INTO public.admin (admin_id, admin_login, admin_password) VALUES ({idGenerator.generationId()},{admin.adminLogin},{admin.adminPassword})")
+                        f"INSERT INTO public.admin (admin_login, admin_password) VALUES ({admin.adminLogin},{admin.adminPassword})")
                     result = "Данные сохранены"
                     return result
         except Exception as ex:
@@ -200,15 +208,18 @@ async def get_conn():
 
 
 async def adCreate():
+    await initialize_pool()
     db = DaBa()
     await db.create_admin_table()
-    await db.add_admin('admin_login', 'admin_password')
+    await db.add_admin('admin', 'admin')
     await db.create_user_table()
 
 
 if __name__ == "__main__":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     superUserPassword = "Kolos213"
     manager = UserManager()
     manager.create_database(f'{dbConst}')
     manager.create_user(f'{user}', f'{password}')
     manager.grant_privileges(f'{user}', f'{dbConst}')
+    asyncio.run(adCreate())

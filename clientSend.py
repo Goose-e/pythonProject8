@@ -12,4 +12,3 @@ while True:
             data = json.loads(line)
             response = httpx.post(url, json=data)
             print(f"Отправлено: {data}, Ответ: {response.status_code}")
-

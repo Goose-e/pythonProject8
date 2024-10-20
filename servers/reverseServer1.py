@@ -8,13 +8,12 @@ from Cryptodome.Cipher import AES
 import httpx
 import json
 import uvicorn
-import time
-
 import consts
+import db
 from consts import portS1
 from maskMethods import Masking
 
-from db import initialize_pool
+from db import initialize_pool, DaBa
 
 servApp = FastAPI()
 
@@ -32,6 +31,16 @@ async def get_public_key():
     return {"public_key": publicKeyUnmade.decode('utf-8')}
 
 
+async def saveInfoInDB(userData):
+    await db.initialize_pool()
+    dataBase = DaBa()
+    try:
+        result = await dataBase.saveInfoInDB(userData['UserID'], userData['Message'])
+        print(result)
+    except Exception as ex:
+        print(f"Ошибка при сохранении информации: {ex}")
+
+
 @servApp.post("/getData")
 async def decode(request: Request):
     encryptedData = await request.json()
@@ -39,11 +48,14 @@ async def decode(request: Request):
         print(encryptedData)
         userData = decrypt_data(encryptedData, privateKey)
         print(userData)
-        #messageUserData=userData
+        # messageUserData=userData
         if isinstance(userData, bytes):
             userData = userData.decode('utf-8')
+
             userData = json.loads(userData)
+
         print(f"Расшифрованные данные: {userData}")
+        await saveInfoInDB(userData)
         async with httpx.AsyncClient() as client:
             response = await client.post("http://127.0.0.1:5010/proxy/", json=json.dumps(userData['Message']))
             print(f"Ответ от proxy: {response.status_code}, {response.text}")
@@ -56,7 +68,7 @@ async def decode(request: Request):
 @servApp.post("/proxy/")
 async def proxy(request: Request):
     data = await request.json()
-    data=json.loads(data)
+    data = json.loads(data)
     data = Masking().maskData(data)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
@@ -66,7 +78,6 @@ async def proxy(request: Request):
 
 
 def decrypt_data(encrypted_data: dict, private_key: rsa.PrivateKey):
-
     try:
         encrypted_key = base64.b64decode(encrypted_data['encrypted_key'])
         ciphertext = base64.b64decode(encrypted_data['ciphertext'])
