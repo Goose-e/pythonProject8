@@ -11,16 +11,11 @@ from prometheus_client import CONTENT_TYPE_LATEST
 from fastapi.responses import Response
 import time
 
-from consts import portR1
-from metrics import REQUEST_COUNT, REQUEST_LATENCY
+from consts import portR1,servers
+from routers.metrics import REQUEST_COUNT, REQUEST_LATENCY
 
 router1 = FastAPI()
 
-servers = [
-    'http://localhost:8000',
-    'http://localhost:8001',
-    'http://localhost:8002'
-]
 
 current_server = 0
 

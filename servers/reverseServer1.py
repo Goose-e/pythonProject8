@@ -24,17 +24,18 @@ async def startDb():
 
 (publicKey, privateKey) = rsa.newkeys(2048)
 
+
 @servApp.get("/getPublicKey")
 async def get_public_key():
     publicKeyUnmade = publicKey.save_pkcs1(format='PEM')
     return {"public_key": publicKeyUnmade.decode('utf-8')}
+
 
 @servApp.post("/getData")
 async def decode(request: Request):
     encryptedData = await request.body()
     try:
         userData = decrypt_data(encryptedData, privateKey)
-
         async with httpx.AsyncClient() as client:
             response = await client.post("http://127.0.0.1:5010/proxy/", json=userData)
             print(f"Ответ от proxy: {response.status_code}, {response.text}")
@@ -42,15 +43,17 @@ async def decode(request: Request):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+
 @servApp.post("/proxy/")
 async def proxy(request: Request):
-    data= await request.json()
-    data=data["message"]
+    data = await request.json()
+    data = data["message"]
     print(data)
     data = Masking().maskData(data)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
-        response = await client.post("https://127.0.0.1:5000/userPingTest", data=json.dumps(data))
+        response = await client.post("https://127.0.0.1:5000/userPingTest", json=json.dumps(data))
+        print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
     return "ok"
 
 
@@ -69,5 +72,3 @@ if __name__ == "__main__":
     asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
     asyncio.run(startDb())
     uvicorn.run("reverseServer1:servApp", host="127.0.0.1", port=portS1, reload=True)
-
-
