@@ -1,17 +1,19 @@
 import json
-from ctypes import windll
-import asyncio
+import Cryptodome.Cipher
+from Cryptodome.Cipher import AES
+from Cryptodome.Random import get_random_bytes
 import rsa
 import httpx
 from fastapi import FastAPI, HTTPException, Request
 import uvicorn
-from prometheus_client import Counter, Histogram, generate_latest
+from prometheus_client import generate_latest
 from prometheus_client import CONTENT_TYPE_LATEST
 from fastapi.responses import Response
 import time
 
 from consts import portR1
 from metrics import REQUEST_COUNT, REQUEST_LATENCY
+
 router1 = FastAPI()
 
 servers = [
@@ -26,6 +28,21 @@ current_server = 0
 @router1.get("/metrics")
 async def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
+def encrypt_data(data, public_key):
+    aes_key = get_random_bytes(16)
+    cipher_aes = AES.new(aes_key, AES.MODE_EAX)
+    ciphertext, tag = cipher_aes.encrypt_and_digest(json.dumps(data).encode())
+
+    encrypted_key = rsa.encrypt(aes_key, public_key)
+
+    return {
+        'encrypted_key': encrypted_key,
+        'ciphertext': ciphertext,
+        'nonce': cipher_aes.nonce,
+        'tag': tag
+    }
 
 
 def get_next_server():
@@ -48,6 +65,7 @@ async def balance_request(data: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router1.get("/getPublicKey")
 async def getPublicKey():
     async with httpx.AsyncClient() as client:
@@ -60,9 +78,10 @@ async def getPublicKey():
             print(f"Ошибка получения публичного ключа: {response.status_code}")
             return None
 
+
 @router1.post("/sendData")
 async def sendData(public_key, data):
-    encrypted_data = rsa.encrypt(json.dumps(data).encode(), public_key)
+    encrypted_data = encrypt_data(data, public_key)
     url = "http://127.0.0.1:5010/getData"
     async with httpx.AsyncClient() as client:
         response = await client.post(url, data=encrypted_data)
@@ -71,15 +90,21 @@ async def sendData(public_key, data):
         else:
             print(f"Ошибка отправки данных: {response.status_code}")
 
+
 @router1.post("/getData")
 async def decode(request: Request):
     data = await request.body()
-    userData = json.loads(data.decode())
+    try:
+        encrypted_data = json.loads(data.decode())
+    except json.JSONDecodeError:
+        return {"status": "error", "message": "Invalid JSON"}
     publicKey = await getPublicKey()
     if publicKey is not None:
-        await sendData(publicKey, userData)
+        response = await sendData(publicKey, encrypted_data)
+        return response
+    else:
+        return {"status": "error", "message": "Public key not available"}
 
 
 if __name__ == '__main__':
     uvicorn.run(router1, host="0.0.0.0", port=portR1)
-

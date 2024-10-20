@@ -2,7 +2,8 @@ import asyncio
 from asyncio import WindowsSelectorEventLoopPolicy
 import rsa
 from fastapi import FastAPI, Request
-from fastapi.testclient import TestClient
+from Cryptodome.Cipher import AES
+
 import httpx
 import json
 import uvicorn
@@ -32,8 +33,8 @@ async def get_public_key():
 async def decode(request: Request):
     encryptedData = await request.body()
     try:
-        decryptedData = rsa.decrypt(encryptedData, privateKey)
-        userData = json.loads(decryptedData.decode())
+        userData = decrypt_data(encryptedData, privateKey)
+
         async with httpx.AsyncClient() as client:
             response = await client.post("http://127.0.0.1:5010/proxy/", json=userData)
             print(f"Ответ от proxy: {response.status_code}, {response.text}")
@@ -51,6 +52,17 @@ async def proxy(request: Request):
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
         response = await client.post("https://127.0.0.1:5000/userPingTest", data=json.dumps(data))
     return "ok"
+
+
+def decrypt_data(encrypted_data, private_key):
+    encrypted_key = encrypted_data['encrypted_key']
+    ciphertext = encrypted_data['ciphertext']
+    nonce = encrypted_data['nonce']
+    tag = encrypted_data['tag']
+    aes_key = rsa.decrypt(encrypted_key, private_key)
+    cipher_aes = AES.new(aes_key, AES.MODE_EAX, nonce=nonce)
+    data = cipher_aes.decrypt_and_verify(ciphertext, tag)
+    return json.loads(data.decode())
 
 
 if __name__ == "__main__":
