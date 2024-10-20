@@ -1,5 +1,8 @@
+from ctypes import windll
+
+import httpx
 from fastapi import FastAPI, HTTPException
-import requests
+import uvicorn
 from prometheus_client import Counter, Histogram, generate_latest
 from prometheus_client import CONTENT_TYPE_LATEST
 from fastapi.responses import Response
@@ -36,15 +39,13 @@ async def balance_request(data: dict):
     start_time = time.time()  # Время начала запроса для измерения задержки
 
     try:
-        # Отправляем данные на выбранный сервер
-        response = requests.post(f"{next_server}/process", json=data)
-        REQUEST_LATENCY.observe(time.time() - start_time)  # Измеряем задержку и записываем её
-        return response.json()  # Возвращаем ответ от сервера клиенту
+        async with httpx.AsyncClient() as client:
+            response = await client.post(f"{next_server}/process", json=data)
+            REQUEST_LATENCY.observe(time.time() - start_time)
+            return response.json()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == '__main__':
-    import uvicorn
-
     uvicorn.run(router1, host="0.0.0.0", port=8000)
