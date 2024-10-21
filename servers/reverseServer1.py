@@ -80,7 +80,7 @@ async def decode(request: Request):
         print(f"Расшифрованные данные: {userData}")
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(f"http://127.0.0.1:{portS1}/proxy/", json=json.dumps(userData))
+            response = await client.post(f"http://127.0.0.1:{portS1}/proxy/", json=userData)
             print(f"Ответ от proxy: {response.status_code}, {response.text}")
         return "Отправлено"
     except Exception as e:
@@ -91,11 +91,12 @@ async def decode(request: Request):
 @servApp.post("/proxy/")
 async def proxy(request: Request):
     data = await request.json()
+    print(type(data))
     data['Message'], flag, text = Masking().maskData(data['Message'])
     await saveInfoInDB(data['UserID'], text, flag)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
-        response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=data)
+        response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=json.dumps( data))
         print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
     return "ok"
 

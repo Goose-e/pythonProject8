@@ -3,7 +3,7 @@ import re
 maskType=1
 class Masking():
     @staticmethod
-    def maskData(text,type):
+    def maskData(text,type = 1):
         # 1. Мобильные телефоны
         phone_pattern = re.compile(r"""
             (?<!\w)                            # Убедимся, что перед номером нет букв
@@ -65,6 +65,7 @@ class Masking():
             [А-Я]{2}[-\s]?\d{8}\b               # Другие форматы дипломов
         """, re.VERBOSE)
         if type==1:
+            text1 = text
             text = phone_pattern.sub("***", text)
             text = passport_pattern.sub("***", text)
             text = card_pattern.sub("***", text)
@@ -82,8 +83,9 @@ class Masking():
 
             text = maskRemainingDigits(text)
 
-            return text
+            return text,(text1 == text),text1
         elif type==2:
+            text1 = text
             text = phone_pattern.sub("", text)
             text = passport_pattern.sub("", text)
             text = card_pattern.sub("", text)
@@ -101,8 +103,9 @@ class Masking():
 
             text = maskRemainingDigits(text)
 
-            return text
+            return text,(text1 == text),text1
         elif type ==3:
+            text1 = text
             checker=text
             text = phone_pattern.sub("***", text)
             text = passport_pattern.sub("***", text)
@@ -123,7 +126,7 @@ class Masking():
             if checker!=text:
                 return False
             else:
-                return text
+                return text,(text1 == text),text1
     def changeMaskType(self, type):
         maskType=type
 
