@@ -41,10 +41,14 @@ servApp.router.lifespan = lifespan
 (publicKey, privateKey) = rsa.newkeys(2048)
 
 
-@servApp.get("/getPublicKey")
+@servApp.get("/getPublicKeyServer")
 async def get_public_key():
-    publicKeyUnmade = publicKey.save_pkcs1(format='PEM')
-    return {"public_key": publicKeyUnmade.decode('utf-8')}
+    try:
+
+        publicKeyUnmade = publicKey.save_pkcs1(format='PEM')  # Преобразуем публичный ключ в формат PEM
+        return {"public_key": publicKeyUnmade.decode('utf-8')}  # Возвращаем строковое представление ключа
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 async def saveInfoInDB(userId, userData, flag):
@@ -62,6 +66,7 @@ async def saveInfoInDB(userId, userData, flag):
 @servApp.post("/getData")
 async def decode(request: Request):
     encryptedData = await request.json()
+    encryptedData = json.loads(encryptedData)
     try:
         print(encryptedData)
         userData = decrypt_data(encryptedData, privateKey)
@@ -69,7 +74,9 @@ async def decode(request: Request):
         # messageUserData=userData
         if isinstance(userData, bytes):
             userData = userData.decode('utf-8')
+
             userData = json.loads(userData)
+
         print(f"Расшифрованные данные: {userData}")
 
         async with httpx.AsyncClient() as client:
@@ -84,22 +91,21 @@ async def decode(request: Request):
 @servApp.post("/proxy/")
 async def proxy(request: Request):
     data = await request.json()
-    data = json.loads(data)
     data['Message'], flag, text = Masking().maskData(data['Message'])
     await saveInfoInDB(data['UserID'], text, flag)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
-        response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=json.dumps(data))
+        response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=data)
         print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
     return "ok"
 
 
 def decrypt_data(encrypted_data: dict, private_key: rsa.PrivateKey):
     try:
-        encrypted_key = base64.b64decode(encrypted_data['encrypted_key'])
-        ciphertext = base64.b64decode(encrypted_data['ciphertext'])
-        nonce = base64.b64decode(encrypted_data['nonce'])
-        tag = base64.b64decode(encrypted_data['tag'])
+        encrypted_key = base64.b64decode(encrypted_data["encrypted_key"])
+        ciphertext = base64.b64decode(encrypted_data["ciphertext"])
+        nonce = base64.b64decode(encrypted_data["nonce"])
+        tag = base64.b64decode(encrypted_data["tag"])
         aes_key = rsa.decrypt(encrypted_key, private_key)
         cipher_aes = AES.new(aes_key, AES.MODE_EAX, nonce=nonce)
         data = cipher_aes.decrypt_and_verify(ciphertext, tag)
@@ -110,4 +116,5 @@ def decrypt_data(encrypted_data: dict, private_key: rsa.PrivateKey):
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
-    uvicorn.run("reverseServer3:servApp", host="127.0.0.1", port=portS3, reload=True, lifespan="on")
+    uvicorn.run("reverseServer1:servApp", host="127.0.0.1", port=portS3, reload=True, lifespan="on")
+

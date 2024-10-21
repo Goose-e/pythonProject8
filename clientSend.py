@@ -1,16 +1,51 @@
-import time
+import asyncio
+import base64
 import httpx
 import json
 import rsa
+from Cryptodome.Cipher import AES
+from Cryptodome.Random import get_random_bytes
 from consts import routers
 
 current_router = 0
 
-while True:
-    with open("jsonData/data.log", "r", encoding="utf-8") as file:
-        for line in file:
-            url = routers[current_router]
-            data = json.loads(line)
-            response = httpx.post(f"{url}/getData", json=data)
-            print(f"Отправлено: {data}, Ответ: {response.status_code}")
-            current_router = (current_router + 1) % len(routers)
+
+def encrypt_data(data, public_key):
+    aes_key = get_random_bytes(16)
+    cipher_aes = AES.new(aes_key, AES.MODE_EAX)
+    ciphertext, tag = cipher_aes.encrypt_and_digest(json.dumps(data).encode())
+    encrypted_key = rsa.encrypt(aes_key, public_key)
+    return {
+        'encrypted_key': base64.b64encode(encrypted_key).decode(),
+        'ciphertext': base64.b64encode(ciphertext).decode(),
+        'nonce': base64.b64encode(cipher_aes.nonce).decode(),
+        'tag': base64.b64encode(tag).decode()
+    }
+
+
+async def clientStart():
+    global current_router
+    while True:
+        with open("jsonData/data.log", "r", encoding="utf-8") as file:
+            for line in file:
+                async with httpx.AsyncClient() as client:
+                    data = json.loads(line)
+                    print(data)
+                    response = await client.get(f"{routers[current_router]}/getPublicKey")
+                    if response.status_code == 200:
+                        publicKeyUnmade = response.json().get("public_key")
+                        print(publicKeyUnmade)
+                        publicKey = rsa.PublicKey.load_pkcs1(publicKeyUnmade.encode('utf-8'))
+                        url = routers[current_router]
+                        print(publicKey)
+                        data = encrypt_data(data, publicKey)
+                        print(type(data))
+                        response = await client.post(f"{url}/sendData", json=json.dumps(data))
+                        print(f"Отправлено: {data}, Ответ: {response.status_code}")
+                        current_router = (current_router + 1) % len(routers)
+                    else:
+                        print("error:", response.status_code)
+
+
+if __name__ == "__main__":
+    asyncio.run(clientStart())

@@ -169,7 +169,7 @@ class DaBa:
                 await cur.execute("""
                           CREATE TABLE "regular" (
                               "regular_id" serial PRIMARY KEY,
-                              "regular_exspression" VARCHAR(255) NOT NULL,
+                              "regular_exspression" VARCHAR NOT NULL,
                               "expression_status" INT NOT NULL
                           );
                       """)
@@ -196,9 +196,9 @@ class DaBa:
             async with conn.cursor() as cur:
                 await cur.execute('DROP TABLE IF EXISTS "source";')
                 await cur.execute("""
-                          CREATE TABLE "regular" (
+                          CREATE TABLE "source" (
                               "source_id" serial PRIMARY KEY,
-                              "source_adress" VARCHAR(255) NOT NULL,
+                              "source_adress" VARCHAR NOT NULL,
                               "source_status" INT NOT NULL
                           );
                       """)
@@ -275,6 +275,9 @@ async def adCreate():
     await db.create_admin_table()
     await db.add_admin('admin', 'admin')
     await db.create_user_table()
+    await db.create_regular_expressions_table()
+    await db.create_source_reader_table()
+
 
 
 if __name__ == "__main__":

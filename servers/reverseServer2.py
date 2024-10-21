@@ -42,10 +42,13 @@ servApp.router.lifespan = lifespan
 (publicKey, privateKey) = rsa.newkeys(2048)
 
 
-@servApp.get("/getPublicKey")
+@servApp.get("/getPublicKeyServer")
 async def get_public_key():
-    publicKeyUnmade = publicKey.save_pkcs1(format='PEM')
-    return {"public_key": publicKeyUnmade.decode('utf-8')}
+    try:
+        publicKeyUnmade = publicKey.save_pkcs1(format='PEM')  # Преобразуем публичный ключ в формат PEM
+        return {"public_key": publicKeyUnmade.decode('utf-8')}  # Возвращаем строковое представление ключа
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 async def saveInfoInDB(userId, userData, flag):
@@ -64,6 +67,8 @@ async def saveInfoInDB(userId, userData, flag):
 @servApp.post("/getData")
 async def decode(request: Request):
     encryptedData = await request.json()
+    encryptedData = json.loads(encryptedData)
+    print(type(encryptedData))
     try:
         print(encryptedData)
         userData = decrypt_data(encryptedData, privateKey)
@@ -75,7 +80,7 @@ async def decode(request: Request):
         print(f"Расшифрованные данные: {userData}")
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(f"http://127.0.0.1:{portS2}/proxy/", json=json.dumps(userData))
+            response = await client.post(f"http://127.0.0.1:{portS2}/proxy/", json=userData)
             print(f"Ответ от proxy: {response.status_code}, {response.text}")
         return "Отправлено"
     except Exception as e:
@@ -86,7 +91,6 @@ async def decode(request: Request):
 @servApp.post("/proxy/")
 async def proxy(request: Request):
     data = await request.json()
-    data = json.loads(data)
     data['Message'], flag, text = Masking().maskData(data['Message'])
     await saveInfoInDB(data['UserID'], text, flag)
     print(data)
@@ -98,11 +102,11 @@ async def proxy(request: Request):
 
 def decrypt_data(encrypted_data: dict, private_key: rsa.PrivateKey):
     try:
-        encrypted_key = base64.b64decode(encrypted_data['encrypted_key'])
-        ciphertext = base64.b64decode(encrypted_data['ciphertext'])
-        nonce = base64.b64decode(encrypted_data['nonce'])
-        tag = base64.b64decode(encrypted_data['tag'])
-        aes_key = rsa.decrypt(encrypted_key, private_key) #!!! #тут ошибка
+        encrypted_key = base64.b64decode(encrypted_data["encrypted_key"])
+        ciphertext = base64.b64decode(encrypted_data["ciphertext"])
+        nonce = base64.b64decode(encrypted_data["nonce"])
+        tag = base64.b64decode(encrypted_data["tag"])
+        aes_key = rsa.decrypt(encrypted_key, private_key)
         cipher_aes = AES.new(aes_key, AES.MODE_EAX, nonce=nonce)
         data = cipher_aes.decrypt_and_verify(ciphertext, tag)
         return json.loads(data.decode('utf-8'))
