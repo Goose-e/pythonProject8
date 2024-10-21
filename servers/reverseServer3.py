@@ -15,10 +15,9 @@ import db
 from consts import portS3, portC1
 from maskMethods import Masking
 
-from db import  DaBa
+from db import DaBa
 
 servApp = FastAPI()
-
 
 
 async def lifespan(scope, receive, send):
@@ -48,12 +47,17 @@ async def get_public_key():
     return {"public_key": publicKeyUnmade.decode('utf-8')}
 
 
-async def saveInfoInDB(userData):
+async def saveInfoInDB(userId, userData, flag):
     try:
-        result = await dataBase.saveInfoInDB(userData['UserID'], userData['Message'])
-        print(result)
+        print(userId, userData, flag)
+        if not flag:
+            result = await dataBase.saveInfoInDB(userId, userData)
+            print(result)
+        else:
+            print("не чд")
     except Exception as ex:
         print(f"Ошибка при сохранении информации: {ex}")
+
 
 
 @servApp.post("/getData")
@@ -68,7 +72,7 @@ async def decode(request: Request):
             userData = userData.decode('utf-8')
             userData = json.loads(userData)
         print(f"Расшифрованные данные: {userData}")
-        await saveInfoInDB(userData)
+
         async with httpx.AsyncClient() as client:
             response = await client.post(f"http://127.0.0.1:{portS3}/proxy/", json=json.dumps(userData['Message']))
             print(f"Ответ от proxy: {response.status_code}, {response.text}")
@@ -82,7 +86,8 @@ async def decode(request: Request):
 async def proxy(request: Request):
     data = await request.json()
     data = json.loads(data)
-    data = Masking().maskData(data)
+    data['Message'], flag, text = Masking().maskData(data['Message'])
+    await saveInfoInDB(data['UserID'], text, flag)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
         response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=json.dumps(data))

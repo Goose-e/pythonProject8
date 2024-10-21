@@ -71,6 +71,7 @@ class Masking():
             return text
 
         # Обработка каждого шаблона
+        text1 = text
         text = find_and_replace(phone_pattern, text)
         text = find_and_replace(passport_pattern, text)
         text = find_and_replace(card_pattern, text)
@@ -88,7 +89,7 @@ class Masking():
 
         text = maskRemainingDigits(text)
 
-        return text
+        return text,(text1==text),text1
 
 
 '''

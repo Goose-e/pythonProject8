@@ -6,3 +6,5 @@ class UserInfo:
     userInfoId: int
     userId: int
     secretInfo: str
+
+
