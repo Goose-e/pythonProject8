@@ -24,7 +24,7 @@ async def startDb():
 
 
 (publicKey, privateKey) = rsa.newkeys(2048)
-
+maskType=1
 
 @servApp.get("/getPublicKey")
 async def get_public_key():
@@ -57,11 +57,12 @@ async def decode(request: Request):
 async def proxy(request: Request):
     data = await request.json()
     data=json.loads(data)
-    data = Masking().maskData(data)
+    data = Masking().maskData(data,maskType)
     print(data)
-    async with httpx.AsyncClient(verify=consts.cert_path) as client:
-        response = await client.post("https://127.0.0.1:5000/userPingTest", json=json.dumps(data))
-        print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
+    if data!=False:
+        async with httpx.AsyncClient(verify=consts.cert_path) as client:
+            response = await client.post("https://127.0.0.1:5000/userPingTest", json=json.dumps(data))
+            print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
     return "ok"
 
 

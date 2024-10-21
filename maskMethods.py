@@ -3,7 +3,7 @@ import re
 
 class Masking():
     @staticmethod
-    def maskData(text):
+    def maskData(text,type):
         # 1. Мобильные телефоны
         phone_pattern = re.compile(r"""
             (?<!\w)                            # Убедимся, что перед номером нет букв
@@ -64,25 +64,69 @@ class Masking():
             ДК[-\s]?\d{8}\b|                   # Диплом в формате ДК00123456 или ДК 00123456
             [А-Я]{2}[-\s]?\d{8}\b               # Другие форматы дипломов
         """, re.VERBOSE)
+        if type==1:
+            text = phone_pattern.sub("***", text)
+            text = passport_pattern.sub("***", text)
+            text = card_pattern.sub("***", text)
+            text = account_pattern.sub("***", text)
+            text = date_pattern.sub("***", text)
+            text = name_pattern.sub("***", text)
+            text = address_pattern.sub("***", text)
+            text = reg_num_pattern.sub("***", text)
+            text = diploma_pattern.sub("***", text)
 
-        text = phone_pattern.sub("***", text)
-        text = passport_pattern.sub("***", text)
-        text = card_pattern.sub("***", text)
-        text = account_pattern.sub("***", text)
-        text = date_pattern.sub("***", text)
-        text = name_pattern.sub("***", text)
-        text = address_pattern.sub("***", text)
-        text = reg_num_pattern.sub("***", text)
-        text = diploma_pattern.sub("***", text)
+            def maskRemainingDigits(text):
+                text = re.sub(r'\b\d{4,}\b', '***', text)
+                text = re.sub(r'\*\*\*\d{2,4}', '***', text)
+                return text
 
-        def maskRemainingDigits(text):
-            text = re.sub(r'\b\d{4,}\b', '***', text)
-            text = re.sub(r'\*\*\*\d{2,4}', '***', text)
+            text = maskRemainingDigits(text)
+
             return text
+        elif type==2:
+            text = phone_pattern.sub("", text)
+            text = passport_pattern.sub("", text)
+            text = card_pattern.sub("", text)
+            text = account_pattern.sub("", text)
+            text = date_pattern.sub("", text)
+            text = name_pattern.sub("", text)
+            text = address_pattern.sub("", text)
+            text = reg_num_pattern.sub("", text)
+            text = diploma_pattern.sub("", text)
 
-        text = maskRemainingDigits(text)
+            def maskRemainingDigits(text):
+                text = re.sub(r'\b\d{4,}\b', '', text)
+                text = re.sub(r'\*\*\*\d{2,4}', '', text)
+                return text
 
-        return text
+            text = maskRemainingDigits(text)
+
+            return text
+        elif type ==3:
+            checker=text
+            text = phone_pattern.sub("***", text)
+            text = passport_pattern.sub("***", text)
+            text = card_pattern.sub("***", text)
+            text = account_pattern.sub("***", text)
+            text = date_pattern.sub("***", text)
+            text = name_pattern.sub("***", text)
+            text = address_pattern.sub("***", text)
+            text = reg_num_pattern.sub("***", text)
+            text = diploma_pattern.sub("***", text)
+
+            def maskRemainingDigits(text):
+                text = re.sub(r'\b\d{4,}\b', '***', text)
+                text = re.sub(r'\*\*\*\d{2,4}', '***', text)
+                return text
+
+            text = maskRemainingDigits(text)
+            if checker!=text:
+                return False
+            else:
+                return text
+
+
+
 '''
 test_texts = [
     "Меня зовут Анна Иванова, мой номер паспорта 4044-528828, а номер карты 5773-2909-7067-8674. Дата рождения: 25 MAY 1982.",
