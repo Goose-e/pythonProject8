@@ -80,7 +80,7 @@ async def decode(request: Request):
         print(f"Расшифрованные данные: {userData}")
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(f"http://127.0.0.1:{portS3}/proxy/", json=userData)
+            response = await client.post(f"http://127.0.0.1:{portS3}/proxy/", json=json.dumps( data))
             print(f"Ответ от proxy: {response.status_code}, {response.text}")
         return "Отправлено"
     except Exception as e:
