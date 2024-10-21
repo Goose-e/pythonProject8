@@ -162,6 +162,64 @@ class DaBa:
             print(f"Error: ", ex)
             return
 
+    async def create_regular_expressions_table(self):
+        async with self.con.connection() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute('DROP TABLE IF EXISTS "regular";')
+                await cur.execute("""
+                          CREATE TABLE "regular" (
+                              "regular_id" serial PRIMARY KEY,
+                              "regular_exspression" VARCHAR(255) NOT NULL,
+                              "expression_status" INT NOT NULL
+                          );
+                      """)
+                await cur.execute("ALTER TABLE regular OWNER TO hackaton_admin;")
+                await cur.execute("GRANT ALL PRIVILEGES ON DATABASE hackaton TO hackaton_admin;")
+                await conn.commit()
+
+    async def saveInfoInRegular(self, regular_exspression):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute(
+                        "INSERT INTO public.regular (regular_exspression, expression_status) VALUES (%s, %s)",
+                        (regular_exspression, 1)
+                    )
+                    result = "Данные сохранены"
+                    return result
+        except Exception as ex:
+            print(f"Error: ", ex)
+            return
+
+    async def create_source_reader_table(self):
+        async with self.con.connection() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute('DROP TABLE IF EXISTS "source";')
+                await cur.execute("""
+                          CREATE TABLE "regular" (
+                              "source_id" serial PRIMARY KEY,
+                              "source_adress" VARCHAR(255) NOT NULL,
+                              "source_status" INT NOT NULL
+                          );
+                      """)
+                await cur.execute("ALTER TABLE regular OWNER TO hackaton_admin;")
+                await cur.execute("GRANT ALL PRIVILEGES ON DATABASE hackaton TO hackaton_admin;")
+                await conn.commit()
+#нужны апдейты статусов для сурс и регулярок
+    async def saveInfoInSource(self, source):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute(
+                        "INSERT INTO public.source (source_adress, source_status) VALUES (%s, %s)",
+                        (source, 1)
+                    )
+                    result = "Данные сохранены"
+                    return result
+
+        except Exception as ex:
+            print(f"Error: ", ex)
+            return
 
 class UserManager:
     def __init__(self):

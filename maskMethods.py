@@ -1,9 +1,9 @@
 import re
 
-
+maskType=1
 class Masking():
     @staticmethod
-    def maskData(text):
+    def maskData(text,type):
         # 1. Мобильные телефоны
         phone_pattern = re.compile(r"""
             (?<!\w)                            # Убедимся, что перед номером нет букв
@@ -64,32 +64,68 @@ class Masking():
             ДК[-\s]?\d{8}\b|                   # Диплом в формате ДК00123456 или ДК 00123456
             [А-Я]{2}[-\s]?\d{8}\b               # Другие форматы дипломов
         """, re.VERBOSE)
+        if type==1:
+            text = phone_pattern.sub("***", text)
+            text = passport_pattern.sub("***", text)
+            text = card_pattern.sub("***", text)
+            text = account_pattern.sub("***", text)
+            text = date_pattern.sub("***", text)
+            text = name_pattern.sub("***", text)
+            text = address_pattern.sub("***", text)
+            text = reg_num_pattern.sub("***", text)
+            text = diploma_pattern.sub("***", text)
 
-        def find_and_replace(pattern, text):
-            matches = pattern.findall(text)  # Найти все совпадения
-            text = pattern.sub("***", text)  # Заменить все совпадения на ***
+            def maskRemainingDigits(text):
+                text = re.sub(r'\b\d{4,}\b', '***', text)
+                text = re.sub(r'\*\*\*\d{2,4}', '***', text)
+                return text
+
+            text = maskRemainingDigits(text)
+
             return text
+        elif type==2:
+            text = phone_pattern.sub("", text)
+            text = passport_pattern.sub("", text)
+            text = card_pattern.sub("", text)
+            text = account_pattern.sub("", text)
+            text = date_pattern.sub("", text)
+            text = name_pattern.sub("", text)
+            text = address_pattern.sub("", text)
+            text = reg_num_pattern.sub("", text)
+            text = diploma_pattern.sub("", text)
 
-        # Обработка каждого шаблона
-        text1 = text
-        text = find_and_replace(phone_pattern, text)
-        text = find_and_replace(passport_pattern, text)
-        text = find_and_replace(card_pattern, text)
-        text = find_and_replace(account_pattern, text)
-        text = find_and_replace(date_pattern, text)
-        text = find_and_replace(name_pattern, text)
-        text = find_and_replace(address_pattern, text)
-        text = find_and_replace(reg_num_pattern, text)
-        text = find_and_replace(diploma_pattern, text)
+            def maskRemainingDigits(text):
+                text = re.sub(r'\b\d{4,}\b', '', text)
+                text = re.sub(r'\*\*\*\d{2,4}', '', text)
+                return text
 
-        def maskRemainingDigits(text):
-            text = re.sub(r'\b\d{4,}\b', '***', text)
-            text = re.sub(r'\*\*\*\d{2,4}', '***', text)
+            text = maskRemainingDigits(text)
+
             return text
+        elif type ==3:
+            checker=text
+            text = phone_pattern.sub("***", text)
+            text = passport_pattern.sub("***", text)
+            text = card_pattern.sub("***", text)
+            text = account_pattern.sub("***", text)
+            text = date_pattern.sub("***", text)
+            text = name_pattern.sub("***", text)
+            text = address_pattern.sub("***", text)
+            text = reg_num_pattern.sub("***", text)
+            text = diploma_pattern.sub("***", text)
 
-        text = maskRemainingDigits(text)
+            def maskRemainingDigits(text):
+                text = re.sub(r'\b\d{4,}\b', '***', text)
+                text = re.sub(r'\*\*\*\d{2,4}', '***', text)
+                return text
 
-        return text,(text1==text),text1
+            text = maskRemainingDigits(text)
+            if checker!=text:
+                return False
+            else:
+                return text
+    def changeMaskType(self, type):
+        maskType=type
 
 
 '''
