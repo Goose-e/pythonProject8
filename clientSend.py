@@ -28,7 +28,7 @@ async def clientStart():
     while True:
         with open("jsonData/data.log", "r", encoding="utf-8") as file:
             for line in file:
-                async with httpx.AsyncClient() as client:
+                async with httpx.AsyncClient(timeout=httpx.Timeout(10.0)) as client:
                     data = json.loads(line)
                     print(data)
                     response = await client.get(f"{routers[current_router]}/getPublicKey")

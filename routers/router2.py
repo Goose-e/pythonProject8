@@ -38,7 +38,7 @@ async def balance_request(data: dict):
     REQUEST_COUNT.inc()
     start_time = time.time()
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=10) as client:
             print(server)
             response = await client.post(f"{server}/process", json=data)
             REQUEST_LATENCY.observe(time.time() - start_time)

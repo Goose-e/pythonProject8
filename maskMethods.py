@@ -1,9 +1,11 @@
 import re
+from enumMask import Mask
 
-maskType=1
+global maskType
+
 class Masking():
     @staticmethod
-    def maskData(text,type = 1):
+    def maskData(text):
         # 1. Мобильные телефоны
         phone_pattern = re.compile(r"""
             (?<!\w)                            # Убедимся, что перед номером нет букв
@@ -64,7 +66,8 @@ class Masking():
             ДК[-\s]?\d{8}\b|                   # Диплом в формате ДК00123456 или ДК 00123456
             [А-Я]{2}[-\s]?\d{8}\b               # Другие форматы дипломов
         """, re.VERBOSE)
-        if type==1:
+        if Mask.maskType==:
+            print(maskType)
             text1 = text
             text = phone_pattern.sub("***", text)
             text = passport_pattern.sub("***", text)
@@ -84,7 +87,8 @@ class Masking():
             text = maskRemainingDigits(text)
 
             return text,(text1 == text),text1
-        elif type==2:
+        elif maskType==2:
+            print(maskType)
             text1 = text
             text = phone_pattern.sub("", text)
             text = passport_pattern.sub("", text)
@@ -104,9 +108,8 @@ class Masking():
             text = maskRemainingDigits(text)
 
             return text,(text1 == text),text1
-        elif type ==3:
+        elif maskType ==3:
             text1 = text
-            checker=text
             text = phone_pattern.sub("***", text)
             text = passport_pattern.sub("***", text)
             text = card_pattern.sub("***", text)
@@ -123,26 +126,11 @@ class Masking():
                 return text
 
             text = maskRemainingDigits(text)
-            if checker!=text:
+            if text1!=text:
                 return False
             else:
                 return text,(text1 == text),text1
-    def changeMaskType(self, type):
-        maskType=type
-
-
-'''
-test_texts = [
-    "Меня зовут Анна Иванова, мой номер паспорта 4044-528828, а номер карты 5773-2909-7067-8674. Дата рождения: 25 MAY 1982.",
-    "Мой номер телефона +375 29 888 98 87, а адрес: Россия, г. Сочи, Зеленый пер., д. 20, кв. 67.",
-    "Телефоны: +375-888-98-87, 3758889887, (802) 946-45-54, 8 (029) 464-54-54.",
-    "Номера паспортов: 4044 528828, 4044528828, 4044-528828, KM5557836.",
-    "Номера карт: 5773 2909 7067 8674, 5773290970678674, 5773-2909-7067-8674.",
-    "Номера счетов: 5091 8082 1000 0000 9484, 50918082100000009484, 5091-8082-1000-0000-9484.",
-    "Дата рождения: 25.05.1982, 1982.05.25, 25 MAY 1982.",
-    "Имена: Daniil Zabolotnyy, D. Zabolotnyy, D. L. Zabolotnyy.",
-    "Адрес: Россия, г.-Сочи, Зеленый-пер., д.-20, кв.-67.",
-    "Регистрационный номер: 53 245 089, 53245089.",
-    "Номер диплома: ДК 00123456, ДК-00123456, ДК00123456."
-]
-'''
+    @staticmethod
+    async def changeMaskType(Stype):
+        maskType = Stype
+        print(f"Mask type set to: {maskType}")

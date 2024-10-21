@@ -96,7 +96,7 @@ async def proxy(request: Request):
     await saveInfoInDB(data['UserID'], text, flag)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
-        response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=json.dumps( data))
+        response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=json.dumps( data['Message']))
         print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
     return "ok"
 

@@ -64,7 +64,7 @@ async def sendData(request:Request):
     print(type(data))
     next_server = get_next_server()
     url = f"{next_server}/getData"
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=10) as client:
         response = await client.post(url, json= data)
         if response.status_code == 200:
             print("Ok")
