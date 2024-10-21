@@ -9,3 +9,6 @@ def addRegularExpression(Expression):
     DaBa().saveInfoInRegular(Expression)
 #экспрешн должен попадать в бд
 #саму бд не смог создать
+def addReaderSource(sourceAdress):
+    pass
+#еще редакт и для регулярок тож самое
