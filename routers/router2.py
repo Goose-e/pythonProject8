@@ -16,13 +16,13 @@ import time
 from consts import servers, portS1, portR2
 from routers.metrics import REQUEST_COUNT, REQUEST_LATENCY
 
-router1 = FastAPI()
+router2 = FastAPI()
 
 current_server = 0
 server = None
 
 
-@router1.get("/metrics")
+@router2.get("/metrics")
 async def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
@@ -51,7 +51,7 @@ def get_next_server():
     return server
 
 
-@router1.post("/send")
+@router2.post("/send")
 async def balance_request(data: dict):
     REQUEST_COUNT.inc()
     start_time = time.time()
@@ -65,20 +65,27 @@ async def balance_request(data: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-cached_public_key = None
-
-
-@router1.get("/getPublicKey")
+@router2.get("/getPublicKey")
 async def getPublicKey():
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{servers[current_server]}/getPublicKey")
-        if response.status_code == 200:
-            publicKeyUnmade = response.json()["public_key"]
-            publicKey = rsa.PublicKey.load_pkcs1(publicKeyUnmade.encode('utf-8'))
-            return publicKey
-        else:
-            print(f"Ошибка получения публичного ключа: {response.status_code}")
-            return None
+    try:
+        # Используем асинхронный HTTP-клиент для получения ключа
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{servers[current_server]}/getPublicKey")
+
+            # Если ответ успешен, извлекаем публичный ключ
+            if response.status_code == 200:
+                publicKeyUnmade = response.json().get("public_key")
+
+                if publicKeyUnmade:
+                    # Декодируем ключ
+                    publicKey = rsa.PublicKey.load_pkcs1(publicKeyUnmade.encode('utf-8'))
+                    return {"public_key": publicKey, "server": servers[current_server]}
+                else:
+                    return {"status": "error", "message": "Ключ отсутствует в ответе"}
+            else:
+                return {"status": "error", "message": f"Ошибка получения публичного ключа: {response.status_code}"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
     # async with httpx.AsyncClient() as client:
     #     response = await client.get(f"{server[current_server]}/getPublicKey")
     #     if response.status_code == 200:
@@ -91,7 +98,7 @@ async def getPublicKey():
     #         return None
 
 
-@router1.post("/sendData")
+@router2.post("/sendData")
 async def sendData(public_key, data):
     encrypted_data = encrypt_data(data, public_key)
     next_server = get_next_server()
@@ -105,21 +112,7 @@ async def sendData(public_key, data):
             print(f"Ошибка отправки данных: {response.status_code}")
 
 
-@router1.post("/getData")
-async def decode(request: Request):
-    data = await request.body()
-    try:
-        encrypted_data = json.loads(data.decode())
-        print(encrypted_data['Message'])
-    except json.JSONDecodeError:
-        return {"status": "error", "message": "Invalid JSON"}
-    publicKey = await getPublicKey()
-    if publicKey is not None:
-        response = await sendData(publicKey, encrypted_data)
-        return response
-    else:
-        return {"status": "error", "message": "Public key not available"}
 
 
 if __name__ == '__main__':
-    uvicorn.run(router1, host="0.0.0.0", port=portR2)
+    uvicorn.run(router2, host="0.0.0.0", port=portR2)

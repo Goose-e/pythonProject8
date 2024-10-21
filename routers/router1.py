@@ -1,7 +1,5 @@
 import base64
 import json
-import logging
-
 from Cryptodome.Cipher import AES
 from Cryptodome.Random import get_random_bytes
 import rsa
@@ -19,7 +17,7 @@ from routers.metrics import REQUEST_COUNT, REQUEST_LATENCY
 router1 = FastAPI()
 
 current_server = 0
-server = None
+server = servers[current_server]
 
 
 @router1.get("/metrics")
@@ -57,7 +55,6 @@ async def balance_request(data: dict):
     start_time = time.time()
     try:
         async with httpx.AsyncClient() as client:
-            print(server)
             response = await client.post(f"{server}/process", json=data)
             REQUEST_LATENCY.observe(time.time() - start_time)
             return response.json()
@@ -65,30 +62,27 @@ async def balance_request(data: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-cached_public_key = None
-
-
 @router1.get("/getPublicKey")
 async def getPublicKey():
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{servers[current_server]}/getPublicKey")
+    try:
+        # Используем асинхронный HTTP-клиент для получения ключа
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{servers[current_server]}/getPublicKey")
+            print(response.status_code, response.text)  # Печатаем текст ответа для отладки
+
         if response.status_code == 200:
-            publicKeyUnmade = response.json()["public_key"]
-            publicKey = rsa.PublicKey.load_pkcs1(publicKeyUnmade.encode('utf-8'))
-            return publicKey
+            publicKeyUnmade = response.json().get("public_key")
+            if publicKeyUnmade:
+                # Декодируем ключ
+                publicKey = rsa.PublicKey.load_pkcs1(publicKeyUnmade.encode('utf-8'))
+                # Возвращаем строку ключа вместо объекта
+                return {"public_key": publicKeyUnmade, "server": servers[current_server]}
+            else:
+                return {"status": "error", "message": "Ключ отсутствует в ответе"}
         else:
-            print(f"Ошибка получения публичного ключа: {response.status_code}")
-            return None
-    # async with httpx.AsyncClient() as client:
-    #     response = await client.get(f"{server[current_server]}/getPublicKey")
-    #     if response.status_code == 200:
-    #         publicKeyUnmade = response.json()["public_key"]
-    #         publicKey = rsa.PublicKey.load_pkcs1(publicKeyUnmade.encode('utf-8'))
-    #         cached_public_key = publicKey  # Обновляем время кэширования
-    #         return publicKey
-    #     else:
-    #         print(f"Ошибка получения публичного ключа: {response.status_code}")
-    #         return None
+            return {"status": "error", "message": f"Ошибка получения публичного ключа: {response.status_code}"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 @router1.post("/sendData")
@@ -103,22 +97,6 @@ async def sendData(public_key, data):
             print("Ok")
         else:
             print(f"Ошибка отправки данных: {response.status_code}")
-
-
-@router1.post("/getData")
-async def decode(request: Request):
-    data = await request.body()
-    try:
-        encrypted_data = json.loads(data.decode())
-        print(encrypted_data['Message'])
-    except json.JSONDecodeError:
-        return {"status": "error", "message": "Invalid JSON"}
-    publicKey = await getPublicKey()
-    if publicKey is not None:
-        response = await sendData(publicKey, encrypted_data)
-        return response
-    else:
-        return {"status": "error", "message": "Public key not available"}
 
 
 if __name__ == '__main__':
