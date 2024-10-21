@@ -24,7 +24,6 @@ async def startDb():
 
 
 (publicKey, privateKey) = rsa.newkeys(2048)
-maskType=1
 
 @servApp.get("/getPublicKey")
 async def get_public_key():
@@ -57,7 +56,7 @@ async def decode(request: Request):
 async def proxy(request: Request):
     data = await request.json()
     data=json.loads(data)
-    data = Masking().maskData(data,maskType)
+    data = Masking().maskData(data)
     print(data)
     if data!=False:
         async with httpx.AsyncClient(verify=consts.cert_path) as client:
