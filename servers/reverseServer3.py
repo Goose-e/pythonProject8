@@ -59,7 +59,6 @@ async def saveInfoInDB(userId, userData, flag):
         print(f"Ошибка при сохранении информации: {ex}")
 
 
-
 @servApp.post("/getData")
 async def decode(request: Request):
     encryptedData = await request.json()
@@ -74,7 +73,7 @@ async def decode(request: Request):
         print(f"Расшифрованные данные: {userData}")
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(f"http://127.0.0.1:{portS3}/proxy/", json=json.dumps(userData['Message']))
+            response = await client.post(f"http://127.0.0.1:{portS3}/proxy/", json=json.dumps(userData))
             print(f"Ответ от proxy: {response.status_code}, {response.text}")
         return "Отправлено"
     except Exception as e:

@@ -4,7 +4,6 @@ import json
 import rsa
 from consts import routers
 
-# Индекс для отслеживания текущего URL
 current_router = 0
 
 while True:
@@ -12,6 +11,6 @@ while True:
         for line in file:
             url = routers[current_router]
             data = json.loads(line)
-            response = httpx.post(url, json=data)
+            response = httpx.post(f"{url}/getData", json=data)
             print(f"Отправлено: {data}, Ответ: {response.status_code}")
             current_router = (current_router + 1) % len(routers)

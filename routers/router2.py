@@ -79,16 +79,7 @@ async def getPublicKey():
         else:
             print(f"Ошибка получения публичного ключа: {response.status_code}")
             return None
-    # async with httpx.AsyncClient() as client:
-    #     response = await client.get(f"{server[current_server]}/getPublicKey")
-    #     if response.status_code == 200:
-    #         publicKeyUnmade = response.json()["public_key"]
-    #         publicKey = rsa.PublicKey.load_pkcs1(publicKeyUnmade.encode('utf-8'))
-    #         cached_public_key = publicKey  # Обновляем время кэширования
-    #         return publicKey
-    #     else:
-    #         print(f"Ошибка получения публичного ключа: {response.status_code}")
-    #         return None
+
 
 
 @router1.post("/sendData")
