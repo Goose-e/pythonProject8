@@ -1,6 +1,6 @@
 import re
 
-
+maskType=1
 class Masking():
     @staticmethod
     def maskData(text,type):
@@ -124,7 +124,8 @@ class Masking():
                 return False
             else:
                 return text
-
+    def changeMaskType(self, type):
+        maskType=type
 
 
 '''
