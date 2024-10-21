@@ -10,6 +10,11 @@ from models.UserInfo import UserInfo
 asyncConnectionPool = None
 
 
+async def close_pool():
+    global asyncConnectionPool
+    await asyncConnectionPool.close()
+
+
 async def initialize_pool():
     global asyncConnectionPool
     asyncConnectionPool = AsyncConnectionPool(
