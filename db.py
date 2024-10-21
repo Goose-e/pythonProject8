@@ -162,6 +162,34 @@ class DaBa:
             print(f"Error: ", ex)
             return
 
+    async def create_regular_expressions_table(self):
+        async with self.con.connection() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute('DROP TABLE IF EXISTS "regular";')
+                await cur.execute("""
+                          CREATE TABLE "regular" (
+                              "regular_id" serial PRIMARY KEY,
+                              "regular_espression" VARCHAR(255) NOT NULL,
+                              "expression_status" INT NOT NULL
+                          );
+                      """)
+                await cur.execute("ALTER TABLE regular OWNER TO hackaton_admin;")
+                await cur.execute("GRANT ALL PRIVILEGES ON DATABASE hackaton TO hackaton_admin;")
+                await conn.commit()
+
+    async def saveInfoInRegular(self, regular_espression):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute(
+                        "INSERT INTO public.regular (regular_espression, expression_status) VALUES (%s, %s)",
+                        (regular_espression, 1)
+                    )
+                    result = "Данные сохранены"
+                    return result
+        except Exception as ex:
+            print(f"Error: ", ex)
+            return
 
 class UserManager:
     def __init__(self):
