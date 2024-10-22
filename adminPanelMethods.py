@@ -1,17 +1,25 @@
-from consts import masking_instance
+from servers import reverseServer1
+from db import DaBa
+import asyncio
+import httpx
+from consts import portS1, portC1
 
 
 class adminControl():
-
     @staticmethod
     async def changeMaskMethod(maskMethodType):
-        masking_instance.set_mask_type(maskMethodType)
+        async with httpx.AsyncClient() as client:
+            data = {"Message": ''}
+            response = await client.post(f"http://127.0.0.1:{portS1}/proxy/", json=(data, maskMethodType))
+            print(f"Ответ от proxy: {response.status_code}, {response.text}")
 
-    # @staticmethod
-    # async def addRegularExpression(Expression):
-    #     await asyncio.to_thread(DaBa().saveInfoInRegular, Expression)
-    #
-    # @staticmethod
-    # async def addReaderSource(sourceAdress):
-    #     pass
-    #     await asyncio.to_thread(DaBa().saveSource, sourceAdress)
+
+@staticmethod
+async def addRegularExpression(Expression):
+    await asyncio.to_thread(DaBa().saveInfoInRegular, Expression)
+
+
+@staticmethod
+async def addReaderSource(sourceAdress):
+    pass
+    await asyncio.to_thread(DaBa().saveSource, sourceAdress)

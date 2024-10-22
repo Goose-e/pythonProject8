@@ -1,10 +1,13 @@
 import re
 import asyncio
+
+from PIL.SpiderImagePlugin import iforms
+
+import enumMask
 from enumMask import Mask
 
 
 class SingletonMeta(type):
-    """Метакласс для реализации одиночки."""
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
@@ -18,14 +21,7 @@ class Masking(metaclass=SingletonMeta):
     def __init__(self):
         self.num = 0
 
-    def set_mask_type(self, mask_type):
-        if isinstance(mask_type, Mask):
-            self.mask_type = mask_type
-            print(f"Mask type set to: {self.mask_type.name}")
-        else:
-            raise ValueError("Invalid mask type")
-
-    def mask_data(self, text):
+    def mask_data(self, text, mask_type):
         patterns = {
             "phone": re.compile(
                 r"(?<!\w)(\+?\d{1,3}[-\s]?)?(\(?\d{2,4}\)?[-\s]?)(\d{1,3}[-\s]?)(\d{1,2}[-\s]?)(\d{2,3})(?!\w)",
@@ -46,15 +42,15 @@ class Masking(metaclass=SingletonMeta):
             "diploma": re.compile(r"(?<!\w)ДК[-\s]?\d{8}\b|[А-Я]{2}[-\s]?\d{8}\b", re.VERBOSE),
         }
 
-        print("Current mask type:", self.mask_type)
+        print("Current mask type:", mask_type)
         text1 = text
-        if self.mask_type == Mask.maskType:
+        if mask_type == Mask.maskType:
             text = self.apply_mask(text, patterns, "***")
             return text, text == text1, text1
-        elif self.mask_type == Mask.maskType2:
+        elif mask_type == Mask.maskType2:
             text = self.apply_mask(text, patterns, "")
             return text, text == text1, text1
-        elif self.mask_type == Mask.maskType3:
+        elif mask_type == Mask.maskType3:
             masked_text = self.apply_mask(text, patterns, "***")
             return masked_text, (masked_text != text), text1
 

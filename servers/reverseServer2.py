@@ -69,9 +69,7 @@ async def decode(request: Request):
     encryptedData = json.loads(encryptedData)
     print(type(encryptedData))
     try:
-        print(encryptedData)
         userData = decrypt_data(encryptedData, privateKey)
-        print(userData)
         # messageUserData=userData
         if isinstance(userData, bytes):
             userData = userData.decode('utf-8')

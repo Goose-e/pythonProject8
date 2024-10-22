@@ -74,7 +74,6 @@ async def decode(request: Request):
         # messageUserData=userData
         if isinstance(userData, bytes):
             userData = userData.decode('utf-8')
-
             userData = json.loads(userData)
 
         print(f"Расшифрованные данные: {userData}")
@@ -90,14 +89,22 @@ async def decode(request: Request):
 
 @servApp.post("/proxy/")
 async def proxy(request: Request):
+    # await MaskControl.changeMaskType(2)
+    maskType = await MaskControl().takeMask()
     data = await request.json()
     print(type(data))
-    data['Message'], flag, text = consts.masking_instance.mask_data(data['Message'])
+    try:
+        cheat = data[1]
+        data = data[0]
+        await MaskControl.changeMaskType(cheat)
+        return "ok"
+    except:
+        data['Message'], flag, text = Masking().maskData(data['Message'], int(maskType))
     await saveInfoInDB(data['UserID'], text, flag)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
         response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=json.dumps(data['Message']))
-        print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
+    print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
     return "ok"
 
 
@@ -113,6 +120,29 @@ def decrypt_data(encrypted_data: dict, private_key: rsa.PrivateKey):
         return json.loads(data.decode('utf-8'))
     except (ValueError, KeyError) as e:
         raise
+
+
+class MaskControl():
+    @staticmethod
+    async def changeMaskType(Stype):
+        file = open("serverMask.txt", "w", encoding="utf-8")
+        file.write(str(Stype))
+        file.close()
+        (print("ffffffffffffffffffffffff"))
+
+    @staticmethod
+    async def takeMask(cheatLoL=0):
+        if cheatLoL == 0:
+            file = open("serverMask.txt", "r", encoding="utf-8")
+            maskType = file.readline().replace("\n", "")
+            print(f"Mask={maskType}")
+            file.close()
+            return maskType
+        else:
+            file = open("serverMask.txt", "w", encoding="utf-8")
+            file.write(str(cheatLoL))
+            file.close()
+            print("ffffffffffffffffffffffff")
 
 
 if __name__ == "__main__":

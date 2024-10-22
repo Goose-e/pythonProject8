@@ -1,8 +1,5 @@
-import base64
 import json
-import logging
 
-import rsa
 import httpx
 from fastapi import FastAPI, HTTPException, Request
 import uvicorn
@@ -61,19 +58,28 @@ async def getPublicKey():
 @router1.post("/sendData")
 async def sendData(request: Request):
     data = await request.json()
-    print(type(data))
-
+    print(f"Полученные данные: {data}")  # Логируем полученные данные
     next_server = get_next_server()
     url = f"{next_server}/getData"
+    print(f"Отправка данных на: {url}")  # Логируем URL
 
-    # Отправляем запросы параллельно к разным серверам
     async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.post(url, json=data)
+        try:
+            response = await client.post(url, json=data)  # Здесь важно, чтобы data был словарем
+            print(f"Ответ от {url}: {response.status_code}, {response.text}")  # Логируем ответ
 
-        if response.status_code == 200:
-            print("Ok")
-        else:
-            print(f"Ошибка отправки данных: {response.status_code}")
+            if response.status_code == 200:
+                print("Ok")
+                return {"status": "success", "data": response.json()}
+            else:
+                print(f"Ошибка отправки данных: {response.status_code}, Ответ: {response.text}")
+                raise HTTPException(status_code=response.status_code, detail=response.text)
+        except httpx.RequestError as e:
+            print(f"Ошибка при отправке запроса: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
+        except Exception as e:
+            print(f"Неожиданная ошибка: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == '__main__':

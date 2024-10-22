@@ -34,12 +34,9 @@ async def clientStart():
                     response = await client.get(f"{routers[current_router]}/getPublicKey")
                     if response.status_code == 200:
                         publicKeyUnmade = response.json().get("public_key")
-
                         publicKey = rsa.PublicKey.load_pkcs1(publicKeyUnmade.encode('utf-8'))
                         url = routers[current_router]
-
                         data = encrypt_data(data, publicKey)
-
                         response = await client.post(f"{url}/sendData", json=json.dumps(data))
                         print(f"Отправлено: {data}, Ответ: {response.status_code}")
                         current_router = (current_router + 1) % len(routers)
