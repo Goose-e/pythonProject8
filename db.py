@@ -2,7 +2,6 @@ import asyncio
 
 import psycopg
 from psycopg_pool import AsyncConnectionPool
-from scipy.special import result
 
 import models.Admin
 from consts import *
@@ -238,12 +237,12 @@ class DaBa:
             print(f"Error: ", ex)
             return
 
+    async def create_full_user_table(self):
 
-async def create_full_user_table(self):
-    async with self.con.connection() as conn:
-        async with conn.cursor() as cur:
-            await cur.execute('DROP TABLE IF EXISTS "full_user";')
-            await cur.execute("""
+        async with self.con.connection() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute('DROP TABLE IF EXISTS "full_user";')
+                await cur.execute("""
                     CREATE TABLE "full_user" (
                         "user_id" int PRIMARY KEY,
                         "email" VARCHAR,
@@ -260,23 +259,23 @@ async def create_full_user_table(self):
                         "last_name" VARCHAR(50)
                     );
                 """)
-            await cur.execute("ALTER TABLE full_user OWNER TO hackaton_admin;")
-            await conn.commit()
+                await cur.execute("ALTER TABLE full_user OWNER TO hackaton_admin;")
+                await conn.commit()
 
+    async def create_source_reader_table(self):
 
-async def create_source_reader_table(self):
-    async with self.con.connection() as conn:
-        async with conn.cursor() as cur:
-            await cur.execute('DROP TABLE IF EXISTS "source";')
-            await cur.execute("""
+        async with self.con.connection() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute('DROP TABLE IF EXISTS "source";')
+                await cur.execute("""
                           CREATE TABLE "source" (
                               "source_id" serial PRIMARY KEY,
                               "source_adress" VARCHAR NOT NULL,
                               "source_status" INT NOT NULL
                           );
                       """)
-            await cur.execute("ALTER TABLE source OWNER TO hackaton_admin;")
-            await conn.commit()
+                await cur.execute("ALTER TABLE source OWNER TO hackaton_admin;")
+                await conn.commit()
 
 
 # нужны апдейты статусов для сурс и регулярок
