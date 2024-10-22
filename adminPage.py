@@ -7,6 +7,7 @@ from servers import reverseServer1, reverseServer2, reverseServer3
 app = Flask(__name__, static_folder="www/files", template_folder="www")
 app.config["SECRET_KEY"]="iojoijoijoijjijjkjlbhyuglftdfyugf7y"
 import asyncio
+from adminPanelMethods import adminControl
 
 @app.route("/")
 @app.route("/Registration_user.html")
@@ -25,7 +26,16 @@ def menu():
     return render_template("Main_menu.html")
 
 @app.route("/Filtering_rules.html")
-def filter():
+@app.route("/Filtering_rules.html", methods=["POST"])
+async def filter():
+    if request.method=="POST":
+        if request.form["type"]=="mask":
+            await adminControl().changeMaskMethod(1)
+        if request.form["type"] == "delete":
+            await adminControl().changeMaskMethod(2)
+        if request.form["type"] == "filter":
+            await adminControl().changeMaskMethod(3)
+        return redirect("Filtering_rules.html")
     return render_template("Filtering_rules.html")
 
 @app.route("/data_sorce.html")
