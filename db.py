@@ -89,7 +89,8 @@ class DaBa:
                 await cur.execute("DROP TABLE IF EXISTS user_info;")
                 await cur.execute("""CREATE TABLE user_info (
                     user_info_id serial PRIMARY KEY,
-                    FOREIGN KEY  user_id  REFERENCES full_user ON DELETE CASCADE,
+                    user_id int not null, 
+                     FOREIGN KEY  (user_id)  REFERENCES full_user(user_id) ON DELETE CASCADE,
                     secret_info VARCHAR,
                     "endpoint" VARCHAR ,
                     "timestamp" TIMESTAMP
@@ -355,11 +356,11 @@ async def adCreate():
     db = DaBa()
     await db.create_admin_table()
     await db.add_admin('admin', 'admin')
-    await db.create_user_table()
     await db.create_regular_expressions_table()
     await db.create_source_reader_table()
     await db.create_full_user_table()
     await db.add_admin('gol', '123')
+    await db.create_user_table()
 
 
 async def test_db_connection():
@@ -380,10 +381,10 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    asyncio.run(main())  # Запустите основную асинхронную функцию
+    # asyncio.run(main())  # Запустите основную асинхронную функцию
     #
-    # manager = UserManager()
-    # manager.create_database(f'{dbConst}')
-    # manager.create_user(f'{user}', f'{password}')
-    # manager.grant_privileges(f'{user}', f'{dbConst}')
-    # asyncio.run(adCreate())
+    manager = UserManager()
+    manager.create_database(f'{dbConst}')
+    manager.create_user(f'{user}', f'{password}')
+    manager.grant_privileges(f'{user}', f'{dbConst}')
+    asyncio.run(adCreate())
