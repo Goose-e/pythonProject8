@@ -170,23 +170,23 @@ class DaBa:
             async with conn.cursor() as cur:
                 await cur.execute('DROP TABLE IF EXISTS "regular";')
                 await cur.execute("""
-                          CREATE TABLE "regular" (
-                              "regular_id" serial PRIMARY KEY,
-                              "regular_exspression" VARCHAR NOT NULL,
-                              "expression_status" INT NOT NULL
-                          );
-                      """)
+                    CREATE TABLE "regular" (
+                        "regular_id" serial PRIMARY KEY,
+                        "regular_expression" VARCHAR NOT NULL,
+                        "expression_status" INT NOT NULL
+                    );
+                """)
                 await cur.execute("ALTER TABLE regular OWNER TO hackaton_admin;")
                 await cur.execute("GRANT ALL PRIVILEGES ON DATABASE hackaton TO hackaton_admin;")
                 await conn.commit()
 
-    async def saveInfoInRegular(self, regular_exspression):
+    async def saveInfoInRegular(self, regular_expression):
         try:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
                     await cursor.execute(
-                        "INSERT INTO public.regular (regular_exspression, expression_status) VALUES (%s, %s)",
-                        (regular_exspression, 1)
+                        "INSERT INTO public.regular (regular_expression, expression_status) VALUES (%s, %s)",
+                        (regular_expression, 1)
                     )
                     result = "Данные сохранены"
                     return result
@@ -194,13 +194,13 @@ class DaBa:
             print(f"Error: ", ex)
             return
 
-    async def deleteRegular(self, regular_exspression_id):
+    async def deleteRegular(self, regular_expression_id):
         try:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
                     await cursor.execute(
                         "DELETE FROM public.regular WHERE regular_id = %s",
-                        (regular_exspression_id)
+                        (regular_expression_id,)
                     )
                     result = "Данные удалены"
                     return result
@@ -220,18 +220,17 @@ class DaBa:
                                   regular_expression=row['regular_expression'],
                                   expression_status=row['expression_status']) for row in rows]
                 return result
-
         except Exception as ex:
             print(f"Error: ", ex)
         return
 
-    async def changeRegularStatus(self, regular_exspression_id, expression_status):
+    async def changeRegularStatus(self, regular_expression_id, expression_status):
         try:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
                     await cursor.execute(
-                        "UPDATE regular SET expression_status = %s  WHERE regular_id = %s",
-                        (expression_status,regular_exspression_id)
+                        "UPDATE regular SET expression_status = %s WHERE regular_id = %s",
+                        (expression_status, regular_expression_id)
                     )
                     result = "Данные изменены"
                     return result
