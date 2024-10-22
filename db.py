@@ -124,7 +124,7 @@ class DaBa:
         try:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
-                    await cursor.execute("SELECT a.admin_login FROM admin a")  # Замените на ваш запрос
+                    await cursor.execute("SELECT a.admin_login a.admin_password FROM admin a")  # Замените на ваш запрос
                     result = await cursor.fetchall()
                     return result
         except Exception as ex:
@@ -352,6 +352,7 @@ async def adCreate():
     await db.create_regular_expressions_table()
     await db.create_source_reader_table()
     await db.create_full_user_table()
+    await db.add_admin('gol', '123')
 
 
 async def test_db_connection():
