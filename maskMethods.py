@@ -65,7 +65,7 @@ class Masking():
             ДК[-\s]?\d{8}\b|                   # Диплом в формате ДК00123456 или ДК 00123456
             [А-Я]{2}[-\s]?\d{8}\b               # Другие форматы дипломов
         """, re.VERBOSE)
-        if maskType==1:
+        if maskType == 1:
             print(maskType)
             text1 = text
             text = phone_pattern.sub("***", text)
@@ -85,8 +85,8 @@ class Masking():
 
             text = maskRemainingDigits(text)
 
-            return text,(text1 == text),text1
-        elif maskType==2:
+            return text, (text1 == text), text1
+        elif maskType == 2:
             print(maskType)
             text1 = text
             text = phone_pattern.sub("", text)
@@ -106,8 +106,8 @@ class Masking():
 
             text = maskRemainingDigits(text)
 
-            return text,(text1 == text),text1
-        elif maskType ==3:
+            return text, (text1 == text), text1
+        elif maskType == 3:
             text1 = text
             text = phone_pattern.sub("***", text)
             text = passport_pattern.sub("***", text)
@@ -118,6 +118,7 @@ class Masking():
             text = address_pattern.sub("***", text)
             text = reg_num_pattern.sub("***", text)
             text = diploma_pattern.sub("***", text)
+            return text, (text1 == text), text1
 
             def maskRemainingDigits(text):
                 text = re.sub(r'\b\d{4,}\b', '***', text)
@@ -125,7 +126,7 @@ class Masking():
                 return text
 
             text = maskRemainingDigits(text)
-            if text1!=text:
+            if text1 != text:
                 return False
             else:
-                return text,(text1 == text),text1
+                return text, (text1 == text), text1

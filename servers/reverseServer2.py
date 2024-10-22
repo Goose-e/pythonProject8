@@ -1,8 +1,6 @@
 import asyncio
 import base64
 from asyncio import WindowsSelectorEventLoopPolicy
-from contextlib import asynccontextmanager
-
 import rsa
 from fastapi import FastAPI, Request
 from Cryptodome.Cipher import AES
@@ -12,19 +10,21 @@ import json
 import uvicorn
 import consts
 import db
-from consts import portS2, portC1
+from consts import  portC1
 from maskMethods import Masking
-
 from db import DaBa
+from models.FullUser import FullUser
+from models.UserInfo import UserInfo
 
 servApp = FastAPI()
+dataBase: DaBa
 
 
 async def lifespan(scope, receive, send):
     if scope['type'] == 'lifespan':
         global dataBase
-        await db.initialize_pool()
         dataBase = DaBa()
+        await db.initialize_pool()
         await send({"type": "lifespan.startup.complete"})  # Сообщаем о завершении старта
         try:
             while True:
@@ -41,6 +41,16 @@ servApp.router.lifespan = lifespan
 (publicKey, privateKey) = rsa.newkeys(2048)
 
 
+async def getAllAdmins():
+    try:
+        dataBase = db.DaBa1()
+        print(type(dataBase.con))
+        result = await dataBase.getAllAdmins()
+        return result
+    except Exception as ex:
+        print(f"Ошибка при получения информации: {ex}")
+
+
 @servApp.get("/getPublicKeyServer")
 async def get_public_key():
     try:
@@ -50,11 +60,18 @@ async def get_public_key():
         return {"status": "error", "message": str(e)}
 
 
-async def saveInfoInDB(userId, userData, flag):
+async def saveInfoInDB(data, Message, flag):
     try:
-        print(userId, userData, flag)
+        print(data, Message, flag)
         if not flag:
-            result = await dataBase.saveInfoInDB(userId, userData)
+            userInfo = UserInfo(
+                userInfoId= 0,
+                userId=data['UserID'],
+                secretInfo=Message,
+                endpoint=data['Endpoint'],
+                timestamp=data['Timestamp']
+            )
+            result = await dataBase.saveInfoInDB(userInfo)
             print(result)
         else:
             print("не чд")
@@ -62,22 +79,37 @@ async def saveInfoInDB(userId, userData, flag):
         print(f"Ошибка при сохранении информации: {ex}")
 
 
-# или тута
 @servApp.post("/getData")
 async def decode(request: Request):
     encryptedData = await request.json()
     encryptedData = json.loads(encryptedData)
-    print(type(encryptedData))
     try:
+        print(encryptedData)
         userData = decrypt_data(encryptedData, privateKey)
+        print(userData)
         # messageUserData=userData
         if isinstance(userData, bytes):
             userData = userData.decode('utf-8')
             userData = json.loads(userData)
         print(f"Расшифрованные данные: {userData}")
-
+        user = await dataBase.findUserByUserId(userData['UserID'])
+        if user is None:
+            user = FullUser(
+                user_id=userData['UserID'],
+                email=userData['Email'],
+                login=userData['Login'],
+                support_level=userData['SupportLevel'],
+                age=userData.get('Возраст'),
+                birthdate=userData.get('Дата рождения'),
+                first_name=userData.get('Имя'),
+                second_name=userData.get('Фамилия'),
+                last_name=userData.get('Отчество'),
+                gender=userData.get('Пол'),
+                phone_number=userData.get('Номер телефона')
+            )
+            await dataBase.saveFullUser(user)
         async with httpx.AsyncClient() as client:
-            response = await client.post(f"http://127.0.0.1:{portS2}/proxy/", json=userData)
+            response = await client.post(f"http://127.0.0.1:{consts.portS1}/proxy/", json=userData)
             print(f"Ответ от proxy: {response.status_code}, {response.text}")
         return "Отправлено"
     except Exception as e:
@@ -87,13 +119,22 @@ async def decode(request: Request):
 
 @servApp.post("/proxy/")
 async def proxy(request: Request):
+    # await MaskControl.changeMaskType(2)
+    maskType = await MaskControl().takeMask()
     data = await request.json()
-    data['Message'], flag, text = Masking().maskData(data['Message'])
-    await saveInfoInDB(data['UserID'], text, flag)
+    print(type(data))
+    try:
+        cheat = data[1]
+        data = data[0]
+        await MaskControl.changeMaskType(cheat)
+        return "ok"
+    except:
+        data['Message'], flag, text = Masking().maskData(data['Message'], int(maskType))
+    await saveInfoInDB(data, text, flag)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
-        response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=json.dumps(data))
-        print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
+        response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=json.dumps(data['Message']))
+    print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
     return "ok"
 
 
@@ -111,6 +152,29 @@ def decrypt_data(encrypted_data: dict, private_key: rsa.PrivateKey):
         raise
 
 
+class MaskControl():
+    @staticmethod
+    async def changeMaskType(Stype):
+        file = open("serverMask.txt", "w", encoding="utf-8")
+        file.write(str(Stype))
+        file.close()
+        (print("ffffffffffffffffffffffff"))
+
+    @staticmethod
+    async def takeMask(cheatLoL=0):
+        if cheatLoL == 0:
+            file = open("serverMask.txt", "r", encoding="utf-8")
+            maskType = file.readline().replace("\n", "")
+            print(f"Mask={maskType}")
+            file.close()
+            return maskType
+        else:
+            file = open("serverMask.txt", "w", encoding="utf-8")
+            file.write(str(cheatLoL))
+            file.close()
+            print("ffffffffffffffffffffffff")
+
+
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
-    uvicorn.run("reverseServer2:servApp", host="127.0.0.1", port=portS2, reload=True, lifespan="on")
+    uvicorn.run("reverseServer2:servApp", host="127.0.0.1", port=consts.portS2, reload=True, lifespan="on")
