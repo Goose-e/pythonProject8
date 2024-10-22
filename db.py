@@ -8,6 +8,7 @@ from models.Admin import Admin
 from models.UserInfo import UserInfo
 
 asyncConnectionPool = None
+superUserPassword = "Kolos213"
 
 
 async def close_pool():
@@ -56,14 +57,12 @@ class DaBa:
     async def create_user_table(self):
         async with self.con.connection() as conn:
             async with conn.cursor() as cur:
-                await cur.execute(f"""
-                    DROP TABLE IF EXISTS user_info;
-                    CREATE TABLE user_info (
-                        user_info_id serial PRIMARY KEY,
-                        user_id BIGINT NOT NULL,
-                        secret_info VARCHAR
-                    );
-                """)
+                await cur.execute("DROP TABLE IF EXISTS user_info;")
+                await cur.execute("""CREATE TABLE user_info (
+                    user_info_id serial PRIMARY KEY,
+                    user_id BIGINT NOT NULL,
+                    secret_info VARCHAR
+                );""")
                 await cur.execute("ALTER TABLE user_info OWNER TO hackaton_admin;")
                 await cur.execute("""
                     GRANT DELETE, INSERT, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE 
@@ -152,10 +151,12 @@ class DaBa:
 
     async def saveAdminInDB(self, admin: models.Admin.Admin):
         try:
-            async with await get_conn() as conn:
+            async with self.con.connection() as conn:
                 async with conn.cursor() as cursor:
                     await cursor.execute(
-                        f"INSERT INTO public.admin (admin_login, admin_password) VALUES ({admin.adminLogin},{admin.adminPassword})")
+                        "INSERT INTO public.admin (admin_login, admin_password) VALUES (%s, %s)",
+                        (admin.adminLogin, admin.adminPassword)
+                    )
                     result = "Данные сохранены"
                     return result
         except Exception as ex:
@@ -191,6 +192,30 @@ class DaBa:
             print(f"Error: ", ex)
             return
 
+    async def create_full_user_table(self):
+        async with self.con.connection() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute('DROP TABLE IF EXISTS "full_user";')
+                await cur.execute("""
+                    CREATE TABLE "full_user" (
+                        "user_id" int PRIMARY KEY,
+                        "email" VARCHAR,
+                        "endpoint" VARCHAR ,
+                        "login" VARCHAR,
+                        "support_level" INT ,
+                        "timestamp" TIMESTAMP,
+                        "age" INT,
+                        "birthdate" DATE,
+                        "first_name" VARCHAR,
+                        "phone_number" VARCHAR,
+                        "middle_name" VARCHAR,
+                        "gender" VARCHAR,
+                        "last_name" VARCHAR(50)
+                    );
+                """)
+                await cur.execute("ALTER TABLE full_user OWNER TO hackaton_admin;")
+                await conn.commit()
+
     async def create_source_reader_table(self):
         async with self.con.connection() as conn:
             async with conn.cursor() as cur:
@@ -203,9 +228,9 @@ class DaBa:
                           );
                       """)
                 await cur.execute("ALTER TABLE regular OWNER TO hackaton_admin;")
-                await cur.execute("GRANT ALL PRIVILEGES ON DATABASE hackaton TO hackaton_admin;")
                 await conn.commit()
-#нужны апдейты статусов для сурс и регулярок
+
+    # нужны апдейты статусов для сурс и регулярок
     async def saveInfoInSource(self, source):
         try:
             async with await get_conn() as conn:
@@ -221,13 +246,14 @@ class DaBa:
             print(f"Error: ", ex)
             return
 
+
 class UserManager:
     def __init__(self):
         self.con = psycopg.connect(
-            dbname='postgres',  # Подключение к системной базе данных
+            dbname=f'postgres',  # Подключение к системной базе данных
             user='postgres',  # Имя суперпользователя
             password=f'{superUserPassword}',  # Пароль суперпользователя
-            host='localhost'
+            host=f'localhost'
         )
         self.cur = self.con.cursor()
 
@@ -249,7 +275,7 @@ class UserManager:
                 dbname='postgres',
                 user='postgres',
                 password=f'{superUserPassword}',
-                host='localhost', autocommit=True
+                host=f'localhost', autocommit=True
         ) as temp_con:
             with temp_con.cursor() as temp_cur:
                 temp_cur.execute(f"DROP DATABASE IF EXISTS  {database_name};")
@@ -259,7 +285,7 @@ class UserManager:
             dbname=database_name,
             user='postgres',
             password=f'{superUserPassword}',
-            host='localhost'
+            host=f'localhost'
         )
         self.cur = self.con.cursor()
 
@@ -277,12 +303,26 @@ async def adCreate():
     await db.create_user_table()
     await db.create_regular_expressions_table()
     await db.create_source_reader_table()
+    await db.create_full_user_table()
 
+
+async def test_db_connection():
+    try:
+        async with await get_conn() as conn:
+            print("Connected to the database successfully.")
+    except Exception as e:
+        print(f"Failed to connect to the database: {e}")
+
+
+async def main():
+    await initialize_pool()  # Инициализируйте пул соединений
+    await test_db_connection()  # Тест подключения к базе данных
 
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    superUserPassword = "Kolos213"
+    # asyncio.run(main())  # Запустите основную асинхронную функцию
+
     manager = UserManager()
     manager.create_database(f'{dbConst}')
     manager.create_user(f'{user}', f'{password}')

@@ -15,10 +15,9 @@ import db
 from consts import portS2, portC1
 from maskMethods import Masking
 
-from db import  DaBa
+from db import DaBa
 
 servApp = FastAPI()
-
 
 
 async def lifespan(scope, receive, send):
@@ -63,7 +62,7 @@ async def saveInfoInDB(userId, userData, flag):
         print(f"Ошибка при сохранении информации: {ex}")
 
 
-#или тута
+# или тута
 @servApp.post("/getData")
 async def decode(request: Request):
     encryptedData = await request.json()
@@ -80,7 +79,7 @@ async def decode(request: Request):
         print(f"Расшифрованные данные: {userData}")
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(f"http://127.0.0.1:{portS2}/proxy/", json=json.dumps( data))
+            response = await client.post(f"http://127.0.0.1:{portS2}/proxy/", json=userData)
             print(f"Ответ от proxy: {response.status_code}, {response.text}")
         return "Отправлено"
     except Exception as e:

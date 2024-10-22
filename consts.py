@@ -1,3 +1,5 @@
+from maskMethods import Masking
+
 host = "localhost"
 portS1 = 5010
 portS2 = 5011
@@ -8,6 +10,7 @@ portC1 = 5000
 user = "hackaton_admin"
 password = "admin"
 dbConst = "hackaton"
+masking_instance = Masking()
 servers = [
     f'http://127.0.0.1:{portS1}',
     # f'http://127.0.0.1:{portS2}',
@@ -15,7 +18,7 @@ servers = [
 ]
 routers = [
     f"http://127.0.0.1:{portR1}",
-    f"http://127.0.0.1:{portR2}"
+    # f"http://127.0.0.1:{portR2}"
 ]
 import os
 

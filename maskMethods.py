@@ -1,136 +1,87 @@
 import re
+import asyncio
 from enumMask import Mask
 
-global maskType
 
-class Masking():
-    @staticmethod
-    def maskData(text):
-        # 1. Мобильные телефоны
-        phone_pattern = re.compile(r"""
-            (?<!\w)                            # Убедимся, что перед номером нет букв
-            (\+?\d{1,3}[-\s]?)?                # Код страны
-            \(?\d{3}\)?[-\s]?                  # Код оператора
-            \d{1,3}[-\s]?\d{1,2}[-\s]?\d{2,3}  # Основной номер
-            (?!\w)                             # Убедимся, что после номера нет букв
-        """, re.VERBOSE)
+class SingletonMeta(type):
+    """Метакласс для реализации одиночки."""
+    _instances = {}
 
-        passport_pattern = re.compile(r"""
-            \b\d{4}[-\s]?\d{6}\b|              # Номер паспорта
-            \b[А-Я]{2}\d{7}\b                   # Белорусские номера паспортов
-        """, re.VERBOSE)
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            instance = super().__call__(*args, **kwargs)
+            cls._instances[cls] = instance
+        return cls._instances[cls]
 
-        # 3. Номера банковских карт
-        card_pattern = re.compile(r"""
-            (?<!\w)                            # Убедимся, что перед номером нет букв
-            (?:\d{4}[-\s]?){3}\d{4}\b|         # Формат: 1234-5678-9012-3456 или 1234 5678 9012 3456
-            \d{16}\b                            # Формат: 1234567890123456
-        """, re.VERBOSE)
 
-        # 4. Номера счетов
-        account_pattern = re.compile(r"""
-            (?<!\w)                            # Убедимся, что перед номером нет букв
-            (?:\d{4}[-\s]?){4}\d{4}\b         # Номер счета
-        """, re.VERBOSE)
+class Masking(metaclass=SingletonMeta):
+    def __init__(self):
+        self.num = 0
 
-        # 5. Даты рождения
-        date_pattern = re.compile(r"""
-            (\b\d{2}[-./]\d{2}[-./]\d{4}\b)|    # ДД.ММ.ГГГГ
-            (\b\d{4}[-./]\d{2}[-./]\d{2}\b)|    # ГГГГ.ММ.ДД
-            (\b\d{2}\s\w{3,}\s\d{4}\b)          # ДД МЕСЯЦ ГГГГ
-        """, re.VERBOSE)
+    def set_mask_type(self, mask_type):
+        if isinstance(mask_type, Mask):
+            self.mask_type = mask_type
+            print(f"Mask type set to: {self.mask_type.name}")
+        else:
+            raise ValueError("Invalid mask type")
 
-        # 6. Имена и фамилии
-        name_pattern = re.compile(r"""
-            (?<!\w)                            # Убедимся, что перед именем нет букв
-            (\b[A-ZА-ЯЁ][a-zа-яё]+\s[A-ZА-ЯЁ][a-zа-яё]+\b)|        # Имя Фамилия
-            (\b[A-ZА-ЯЁ]\.\s[A-ZА-ЯЁ][a-zа-яё]+\b)|                # И. Фамилия
-            (\b[A-ZА-ЯЁ]\.\s[A-ZА-ЯЁ]\.\s[A-ZА-ЯЁ][a-zа-яё]+\b)    # И. О. Фамилия
-        """, re.VERBOSE)
+    def mask_data(self, text):
+        patterns = {
+            "phone": re.compile(
+                r"(?<!\w)(\+?\d{1,3}[-\s]?)?(\(?\d{2,4}\)?[-\s]?)(\d{1,3}[-\s]?)(\d{1,2}[-\s]?)(\d{2,3})(?!\w)",
+                re.VERBOSE),
+            "passport": re.compile(r"\b\d{4}[-\s]?\d{6}\b|\b[A-Z]{2}\d{7}\b", re.VERBOSE),
+            "card": re.compile(r"(?<!\w)(?:\d{4}[-\s]?){3}\d{4}\b|\d{16}\b", re.VERBOSE),
+            "account": re.compile(r"(?<!\w)(?:\d{4}[-\s]?){4}\d{4}\b", re.VERBOSE),
+            "date": re.compile(
+                r"(\b\d{2}[-./]\d{2}[-./]\d{4}\b)|(\b\d{4}[-./]\d{2}[-./]\d{2}\b)|(\b\d{2}\s\w{3,}\s\d{4}\b)",
+                re.VERBOSE),
+            "name": re.compile(
+                r"(?<!\w)(\b[A-ZА-ЯЁ][a-zа-яё]+\s[A-ZА-ЯЁ][a-zа-яё]+\b)|(\b[A-ZА-ЯЁ]\.\s[A-ZА-ЯЁ][a-zа-яё]+\b)|(\b[A-ZА-ЯЁ]\.\s[A-ZА-ЯЁ]\.\s[A-ZА-ЯЁ][a-zа-яё]+\b)",
+                re.VERBOSE),
+            "address": re.compile(
+                r"(?<!\w)(Россия|Беларусь|г\.\s?[А-Яа-яЁё]+|г\.[-]?\s?[А-Яа-яЁё]+|город\s?[А-Яа-яЁё]+|ул\.\s?[А-Яа-яЁё]+|улица\s?[А-Яа-яЁё]+|пер\.\s?[А-Яа-яЁё]+|[А-Яа-яЁё]+[-\s]?пер\.|переулок\s?[А-Яа-яЁё]+|д\.-?\s?\d+|дом\s?\d+|кв\.-?\s?\d+|квартира\s?\d+)",
+                re.VERBOSE),
+            "reg_num": re.compile(r"(?<!\w)\d{2}[-\s]?\d{3}[-\s]?\d{3}(?!\w)", re.VERBOSE),
+            "diploma": re.compile(r"(?<!\w)ДК[-\s]?\d{8}\b|[А-Я]{2}[-\s]?\d{8}\b", re.VERBOSE),
+        }
 
-        # 7. Адреса
-        address_pattern = re.compile(r"""
-            (?<!\w)                            # Убедимся, что перед адресом нет букв
-            (Россия|г\.\s?[А-Яа-яЁё]+|г[-]?\s?[А-Яа-яЁё]+|ул\.\s?[А-Яа-яЁё]+|пер\.\s?[А-Яа-яЁё]+|д\.\s?\d+|кв\.\s?\d+|дом\s?\d+)
-        """, re.VERBOSE)
+        print("Current mask type:", self.mask_type)
+        text1 = text
+        if self.mask_type == Mask.maskType:
+            text = self.apply_mask(text, patterns, "***")
+            return text, text == text1, text1
+        elif self.mask_type == Mask.maskType2:
+            text = self.apply_mask(text, patterns, "")
+            return text, text == text1, text1
+        elif self.mask_type == Mask.maskType3:
+            masked_text = self.apply_mask(text, patterns, "***")
+            return masked_text, (masked_text != text), text1
 
-        # 8. Регистрационные номера
-        reg_num_pattern = re.compile(r"""
-            (?<!\w)                            # Убедимся, что перед номером нет букв
-            \d{2}[-\s]?\d{3}[-\s]?\d{3}(?!\w)  # Регистрационный номер
-        """, re.VERBOSE)
+    def apply_mask(self, text, patterns, replacement):
+        for pattern in patterns.values():
+            text = pattern.sub(replacement, text)
+        return text
 
-        # 9. Номера дипломов
-        diploma_pattern = re.compile(r"""
-            (?<!\w)                            # Убедимся, что перед номером нет букв
-            ДК[-\s]?\d{8}\b|                   # Диплом в формате ДК00123456 или ДК 00123456
-            [А-Я]{2}[-\s]?\d{8}\b               # Другие форматы дипломов
-        """, re.VERBOSE)
-        if Mask.maskType==:
-            print(maskType)
-            text1 = text
-            text = phone_pattern.sub("***", text)
-            text = passport_pattern.sub("***", text)
-            text = card_pattern.sub("***", text)
-            text = account_pattern.sub("***", text)
-            text = date_pattern.sub("***", text)
-            text = name_pattern.sub("***", text)
-            text = address_pattern.sub("***", text)
-            text = reg_num_pattern.sub("***", text)
-            text = diploma_pattern.sub("***", text)
 
-            def maskRemainingDigits(text):
-                text = re.sub(r'\b\d{4,}\b', '***', text)
-                text = re.sub(r'\*\*\*\d{2,4}', '***', text)
-                return text
+# Пример использования
+async def main():
+    masking = Masking()
 
-            text = maskRemainingDigits(text)
+    print(masking is Masking())  # Это должно вывести True, так как оба экземпляра должны быть одинаковыми
 
-            return text,(text1 == text),text1
-        elif maskType==2:
-            print(maskType)
-            text1 = text
-            text = phone_pattern.sub("", text)
-            text = passport_pattern.sub("", text)
-            text = card_pattern.sub("", text)
-            text = account_pattern.sub("", text)
-            text = date_pattern.sub("", text)
-            text = name_pattern.sub("", text)
-            text = address_pattern.sub("", text)
-            text = reg_num_pattern.sub("", text)
-            text = diploma_pattern.sub("", text)
+    example_text = "Контактный номер: +1(234) 567-8901, паспорт 1234 567890."
 
-            def maskRemainingDigits(text):
-                text = re.sub(r'\b\d{4,}\b', '', text)
-                text = re.sub(r'\*\*\*\d{2,4}', '', text)
-                return text
+    # Первичное маскирование
+    masked_text = masking.mask_data(example_text)
+    print("Masked text (initial):", masked_text)
 
-            text = maskRemainingDigits(text)
+    # Изменяем тип маски
 
-            return text,(text1 == text),text1
-        elif maskType ==3:
-            text1 = text
-            text = phone_pattern.sub("***", text)
-            text = passport_pattern.sub("***", text)
-            text = card_pattern.sub("***", text)
-            text = account_pattern.sub("***", text)
-            text = date_pattern.sub("***", text)
-            text = name_pattern.sub("***", text)
-            text = address_pattern.sub("***", text)
-            text = reg_num_pattern.sub("***", text)
-            text = diploma_pattern.sub("***", text)
+    # Маскирование после изменения типа
+    masked_text_updated = masking.mask_data(example_text)
+    print("Masked text (after change):", masked_text_updated)
 
-            def maskRemainingDigits(text):
-                text = re.sub(r'\b\d{4,}\b', '***', text)
-                text = re.sub(r'\*\*\*\d{2,4}', '***', text)
-                return text
 
-            text = maskRemainingDigits(text)
-            if text1!=text:
-                return False
-            else:
-                return text,(text1 == text),text1
-    @staticmethod
-    async def changeMaskType(Stype):
-        maskType = Stype
-        print(f"Mask type set to: {maskType}")
+if __name__ == "__main__":
+    asyncio.run(main())

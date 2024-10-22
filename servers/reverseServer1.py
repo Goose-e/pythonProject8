@@ -92,11 +92,11 @@ async def decode(request: Request):
 async def proxy(request: Request):
     data = await request.json()
     print(type(data))
-    data['Message'], flag, text = Masking().maskData(data['Message'])
+    data['Message'], flag, text = consts.masking_instance.mask_data(data['Message'])
     await saveInfoInDB(data['UserID'], text, flag)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
-        response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=json.dumps( data['Message']))
+        response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=json.dumps(data['Message']))
         print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
     return "ok"
 
@@ -118,4 +118,3 @@ def decrypt_data(encrypted_data: dict, private_key: rsa.PrivateKey):
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
     uvicorn.run("reverseServer1:servApp", host="127.0.0.1", port=portS1, reload=True, lifespan="on")
-

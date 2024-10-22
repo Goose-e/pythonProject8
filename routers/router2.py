@@ -1,8 +1,3 @@
-import base64
-import json
-import logging
-
-import rsa
 import httpx
 from fastapi import FastAPI, HTTPException, Request
 import uvicorn
@@ -38,7 +33,7 @@ async def balance_request(data: dict):
     REQUEST_COUNT.inc()
     start_time = time.time()
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
+        async with httpx.AsyncClient() as client:
             print(server)
             response = await client.post(f"{server}/process", json=data)
             REQUEST_LATENCY.observe(time.time() - start_time)
@@ -59,14 +54,17 @@ async def getPublicKey():
 
 
 @router2.post("/sendData")
-async def sendData(request:Request):
+async def sendData(request: Request):
     data = await request.json()
     print(type(data))
+
     next_server = get_next_server()
-    print(next_server)
     url = f"{next_server}/getData"
-    async with httpx.AsyncClient() as client:
+
+    # Отправляем запросы параллельно к разным серверам
+    async with httpx.AsyncClient(timeout=10) as client:
         response = await client.post(url, json=data)
+
         if response.status_code == 200:
             print("Ok")
         else:

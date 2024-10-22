@@ -59,13 +59,17 @@ async def getPublicKey():
 
 
 @router1.post("/sendData")
-async def sendData(request:Request):
+async def sendData(request: Request):
     data = await request.json()
     print(type(data))
+
     next_server = get_next_server()
     url = f"{next_server}/getData"
+
+    # Отправляем запросы параллельно к разным серверам
     async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.post(url, json= data)
+        response = await client.post(url, json=data)
+
         if response.status_code == 200:
             print("Ok")
         else:
