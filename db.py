@@ -13,7 +13,8 @@ superUserPassword = "Kolos213"
 
 async def close_pool():
     global asyncConnectionPool
-    await asyncConnectionPool.close()
+
+
 
 
 async def initialize_pool():
