@@ -14,17 +14,14 @@ import consts
 import db
 from consts import portS1, portC1
 from maskMethods import Masking
-
-from db import DaBa
+from db import DaBa, initialize_pool
 
 servApp = FastAPI()
 
 
 async def lifespan(scope, receive, send):
     if scope['type'] == 'lifespan':
-        global dataBase
         await db.initialize_pool()
-        dataBase = DaBa()
         await send({"type": "lifespan.startup.complete"})  # Сообщаем о завершении старта
         try:
             while True:
@@ -39,8 +36,12 @@ async def lifespan(scope, receive, send):
 servApp.router.lifespan = lifespan
 
 (publicKey, privateKey) = rsa.newkeys(2048)
+
+
 async def getAllAdmins():
     try:
+        dataBase = db.DaBa1()
+        print(type(dataBase.con))
         result = await dataBase.getAllAdmins()
         return result
     except Exception as ex:
@@ -61,7 +62,8 @@ async def saveInfoInDB(userId, userData, flag):
     try:
         print(userId, userData, flag)
         if not flag:
-            result = await dataBase.saveInfoInDB(userId, userData)
+            result = 1
+            #await dataBase.saveInfoInDB(userId, userData)
             print(result)
         else:
             print("не чд")

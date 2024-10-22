@@ -9,9 +9,8 @@ from models.Admin import Admin
 from models.Regular import Regular
 from models.UserInfo import UserInfo
 
-asyncConnectionPool = None
 superUserPassword = "Kolos213"
-
+asyncConnectionPool = None
 
 async def close_pool():
     global asyncConnectionPool
@@ -19,12 +18,18 @@ async def close_pool():
 
 async def initialize_pool():
     global asyncConnectionPool
-    asyncConnectionPool = AsyncConnectionPool(
-        f"dbname={dbConst} user={user} password='{password}' host='{host}'",
-        min_size=1,
-        max_size=10,
-    )
-    await asyncConnectionPool.open()
+    try:
+        asyncConnectionPool = AsyncConnectionPool(
+            f"dbname=hackaton user=hackaton_admin password='admin' host='localhost'",
+            min_size=1,
+            max_size=10,
+        )
+        print(type(asyncConnectionPool))  # Должно быть <class '...'>
+        await asyncConnectionPool.open()
+        print("pool is open")
+        # Попробуем открыть пул
+    except Exception as e:
+        print(f"Ошибка при инициализации пула: {e}")
 
 
 class DaBa:
@@ -100,7 +105,7 @@ class DaBa:
         try:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
-                    await cursor.execute("SELECT u.user_id FROM user_info u")  # Замените на ваш запрос
+                    await cursor.execute("SELECT user_id FROM user_info ")  # Замените на ваш запрос
                     result = await cursor.fetchall()
                     return result
         except Exception as ex:
@@ -112,7 +117,7 @@ class DaBa:
         try:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
-                    await cursor.execute("SELECT u.user_id, u.secret_info FROM user_info u")
+                    await cursor.execute("SELECT user_id, secret_info FROM user_info ")
                     result = await cursor.fetchall()
                     return result
         except Exception as ex:
@@ -124,7 +129,7 @@ class DaBa:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
                     await cursor.execute(
-                        f"SELECT u.user_id, u.secret_info FROM user_info u WHERE user_id ={id}")
+                        f"SELECT user_id, secret_info FROM user_info WHERE user_id ={id}")
                     result = await cursor.fetchall()
                     return result
         except Exception as ex:
@@ -150,7 +155,7 @@ class DaBa:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
                     await cursor.execute(
-                        "SELECT a.admin_login a.admin_password FROM admin_table a")  # Замените на ваш запрос
+                        "SELECT admin_login, admin_password FROM admin_table")  # Замените на ваш запрос
                     result = await cursor.fetchall()
                     return result
         except Exception as ex:
@@ -163,7 +168,7 @@ class DaBa:
             async with self.con.connection() as conn:
                 async with conn.cursor() as cur:
                     await cur.execute(
-                        "SELECT * FROM admin_table a WHERE admin_login = %s AND admin_password = %s",
+                        "SELECT * FROM admin_table WHERE admin_login = %s AND admin_password = %s",
                         (admin.adminLogin, admin.adminPassword)
                     )
                     result = await cur.fetchone()
@@ -324,7 +329,8 @@ class UserManager:
                 dbname='postgres',
                 user='postgres',
                 password=f'{superUserPassword}',
-                host=f'localhost', autocommit=True
+                host=f'localhost',
+                autocommit=True
         ) as temp_con:
             with temp_con.cursor() as temp_cur:
                 temp_cur.execute(f"DROP DATABASE IF EXISTS  {database_name};")
@@ -362,19 +368,22 @@ async def test_db_connection():
             print("Connected to the database successfully.")
     except Exception as e:
         print(f"Failed to connect to the database: {e}")
-
+def DaBa1():
+    return DaBa()
 
 async def main():
     await initialize_pool()  # Инициализируйте пул соединений
     await test_db_connection()  # Тест подключения к базе данных
+    data = DaBa()
+    print(type(data.con))
 
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    # asyncio.run(main())  # Запустите основную асинхронную функцию
-
-    manager = UserManager()
-    manager.create_database(f'{dbConst}')
-    manager.create_user(f'{user}', f'{password}')
-    manager.grant_privileges(f'{user}', f'{dbConst}')
-    asyncio.run(adCreate())
+    asyncio.run(main())  # Запустите основную асинхронную функцию
+    #
+    # manager = UserManager()
+    # manager.create_database(f'{dbConst}')
+    # manager.create_user(f'{user}', f'{password}')
+    # manager.grant_privileges(f'{user}', f'{dbConst}')
+    # asyncio.run(adCreate())
