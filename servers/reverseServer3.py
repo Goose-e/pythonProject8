@@ -93,6 +93,7 @@ async def decode(request: Request):
             userData = json.loads(userData)
         print(f"Расшифрованные данные: {userData}")
         user = await dataBase.findUserByUserId(userData['UserID'])
+        # ↓☠️☠️
         if user is None:
             user = FullUser(
                 user_id=userData['UserID'],
