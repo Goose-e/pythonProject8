@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main menu</title>
+    <link rel="stylesheet" href="files/css/Main_menu.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="up_interface">
+      <img src="files/images/Swords_main.PNG" alt="swords" id="swords" />
+      <p id="pagename">StreamFilter</p>
+      <a href="Registration_user.html" id="logout">Log out</a>
+    </div>
+
+    <div id="left_interface">
+      <div id=" choosen_page" class="sidebar-menu">
+        <img src="files/images/icons_main.PNG" alt="icons" id="icons" />
+        <a href="" class="tabl now">Overview</a>
+        <a href="Filtering_rules.html" class="tabl">Filtering and Rules</a>
+        <a href="data_sorce.html" class="tabl">Data Sources</a>
+        <a href="" class="tabl">Support</a>
+      </div>
+    </div>
+
+    <div id="serverinfo"></div>
+    <div id="userinfo"></div>
+
+    <div id="table">
+      <p id="massage-sens">Message containing sensetiva data</p>
+      <table>
+        <tr id="welcome-string">
+          <td style=" width: 240px;">User ID</td>
+          <td style="width: 240px; text-align: center;">Email</td>
+          <td style="width: 120px; text-align: center;">Timestamp</td>
+          <td style="width: 240px; text-align: center;">Massage</td>
+          <td style="width: 400px; text-align: center;">Endpoint</td>
+        </tr>
+      </table>
+    </div>
+    <script src="files/js/Main_menu.js"></script>
+  </body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Filtering</title>
+    <link rel="stylesheet" href="files/css/Filtering_rules.css" />
+    <link rel="stylesheet" href="files/css/Main_menu.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="up_interface">
+      <img src="files/images/Swords_main.PNG" alt="swords" id="swords" />
+      <p id="pagename">StreamFilter</p>
+      <a href="Registration_user.html" id="logout">Log out</a>
+    </div>
+
+    <div id="left_interface">
+      <div id="choosen_page" class="sidebar-menu">
+        <img src="files/images/Filter.PNG" alt="icons" id="icons-filter-page" />
+        <a href="Main_menu.html" class="tabl">Overview</a>
+        <a href="" class="tabl now">Filtering and Rules</a>
+        <a href="data_sorce.html" class="tabl">Data Sources</a>
+        <a href="" class="tabl">Support</a>
+      </div>
+    </div>
+
+     <div id="stat"></div>
+    <div id="rulesforinfo">
+      <form id="filterForm" method="post" onsubmit="submitFilter()">
+        <div id="message-sens">
+          <div id="radios">
+            <p>Select a filter type</p>
+            <label>
+              <input type="radio" name="type" value="mask" />
+              Mask
+            </label>
+            <label>
+              <input type="radio" name="type" value="delete" />
+              Delete
+            </label>
+            <label>
+              <input type="radio" name="type" value="filter" />
+              Filter
+            </label>
+          </div>
+          <button id="confirm" type="submit">Confirm</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="table">
+      <p id="massage-sens">List of regular expressions</p>
+      <table>
+        <tr id="welcome-string">
+          <td style="width: 240px">Numer</td>
+          <td style="width: 240px; text-ali
