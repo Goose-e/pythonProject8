@@ -3,12 +3,16 @@ from flask import Flask, render_template, request, redirect, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import db
 from db import DaBa
+import asyncio
+from adminPanelMethods import adminControl
 from servers import reverseServer1, reverseServer2, reverseServer3
+from flask_login import LoginManager, login_user, login_required, current_user, logout_user
+
+
 
 app = Flask(__name__, static_folder="www/files", template_folder="www")
 app.config["SECRET_KEY"] = "iojoijoijoijjijjkjlbhyuglftdfyugf7y"
-import asyncio
-from adminPanelMethods import adminControl
+login_manager=LoginManager(app)
 
 
 @app.route("/")

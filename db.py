@@ -380,10 +380,9 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    asyncio.run(main())  # Запустите основную асинхронную функцию
-    #
-    # manager = UserManager()
-    # manager.create_database(f'{dbConst}')
-    # manager.create_user(f'{user}', f'{password}')
-    # manager.grant_privileges(f'{user}', f'{dbConst}')
-    # asyncio.run(adCreate())
+    #asyncio.run(main())  # Запустите основную асинхронную функцию
+    manager = UserManager()
+    manager.create_database(f'{dbConst}')
+    manager.create_user(f'{user}', f'{password}')
+    manager.grant_privileges(f'{user}', f'{dbConst}')
+    asyncio.run(adCreate())
