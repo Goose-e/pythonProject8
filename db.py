@@ -2,9 +2,12 @@ import asyncio
 
 import psycopg
 from psycopg_pool import AsyncConnectionPool
+from scipy.special import result
+
 import models.Admin
 from consts import *
 from models.Admin import Admin
+from models.Regular import Regular
 from models.UserInfo import UserInfo
 
 asyncConnectionPool = None
@@ -13,8 +16,6 @@ superUserPassword = "Kolos213"
 
 async def close_pool():
     global asyncConnectionPool
-
-
 
 
 async def initialize_pool():
@@ -193,11 +194,57 @@ class DaBa:
             print(f"Error: ", ex)
             return
 
-    async def create_full_user_table(self):
-        async with self.con.connection() as conn:
-            async with conn.cursor() as cur:
-                await cur.execute('DROP TABLE IF EXISTS "full_user";')
-                await cur.execute("""
+    async def deleteRegular(self, regular_exspression_id):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute(
+                        "DELETE FROM public.regular WHERE regular_id = %s",
+                        (regular_exspression_id)
+                    )
+                    result = "Данные удалены"
+                    return result
+        except Exception as ex:
+            print(f"Error: ", ex)
+            return
+
+    async def getAllRegulars(self):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute(
+                        "SELECT * FROM public.regular ORDER BY regular_id"
+                    )
+                rows = await cursor.fetchall()
+                result = [Regular(regular_id=row['regular_id'],
+                                  regular_expression=row['regular_expression'],
+                                  expression_status=row['expression_status']) for row in rows]
+                return result
+
+        except Exception as ex:
+            print(f"Error: ", ex)
+        return
+
+    async def changeRegularStatus(self, regular_exspression_id, expression_status):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute(
+                        "UPDATE regular SET expression_status = %s  WHERE regular_id = %s",
+                        (expression_status,regular_exspression_id)
+                    )
+                    result = "Данные изменены"
+                    return result
+        except Exception as ex:
+            print(f"Error: ", ex)
+            return
+
+
+async def create_full_user_table(self):
+    async with self.con.connection() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute('DROP TABLE IF EXISTS "full_user";')
+            await cur.execute("""
                     CREATE TABLE "full_user" (
                         "user_id" int PRIMARY KEY,
                         "email" VARCHAR,
@@ -214,38 +261,40 @@ class DaBa:
                         "last_name" VARCHAR(50)
                     );
                 """)
-                await cur.execute("ALTER TABLE full_user OWNER TO hackaton_admin;")
-                await conn.commit()
+            await cur.execute("ALTER TABLE full_user OWNER TO hackaton_admin;")
+            await conn.commit()
 
-    async def create_source_reader_table(self):
-        async with self.con.connection() as conn:
-            async with conn.cursor() as cur:
-                await cur.execute('DROP TABLE IF EXISTS "source";')
-                await cur.execute("""
+
+async def create_source_reader_table(self):
+    async with self.con.connection() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute('DROP TABLE IF EXISTS "source";')
+            await cur.execute("""
                           CREATE TABLE "source" (
                               "source_id" serial PRIMARY KEY,
                               "source_adress" VARCHAR NOT NULL,
                               "source_status" INT NOT NULL
                           );
                       """)
-                await cur.execute("ALTER TABLE regular OWNER TO hackaton_admin;")
-                await conn.commit()
+            await cur.execute("ALTER TABLE source OWNER TO hackaton_admin;")
+            await conn.commit()
 
-    # нужны апдейты статусов для сурс и регулярок
-    async def saveInfoInSource(self, source):
-        try:
-            async with await get_conn() as conn:
-                async with conn.cursor() as cursor:
-                    await cursor.execute(
-                        "INSERT INTO public.source (source_adress, source_status) VALUES (%s, %s)",
-                        (source, 1)
-                    )
-                    result = "Данные сохранены"
-                    return result
 
-        except Exception as ex:
-            print(f"Error: ", ex)
-            return
+# нужны апдейты статусов для сурс и регулярок
+async def saveInfoInSource(self, source):
+    try:
+        async with await get_conn() as conn:
+            async with conn.cursor() as cursor:
+                await cursor.execute(
+                    "INSERT INTO public.source (source_adress, source_status) VALUES (%s, %s)",
+                    (source, 1)
+                )
+                result = "Данные сохранены"
+                return result
+
+    except Exception as ex:
+        print(f"Error: ", ex)
+        return
 
 
 class UserManager:
