@@ -36,13 +36,13 @@ class DaBa:
             async with conn.cursor() as cur:
                 await cur.execute('DROP TABLE IF EXISTS "admin";')
                 await cur.execute("""
-                          CREATE TABLE "admin" (
+                          CREATE TABLE "admin_table" (
                               "admin_id" serial PRIMARY KEY,
                               "admin_login" VARCHAR(20) NOT NULL UNIQUE,
                               "admin_password" VARCHAR(255) NOT NULL
                           );
                       """)
-                await cur.execute("ALTER TABLE admin OWNER TO hackaton_admin;")
+                await cur.execute("ALTER TABLE admin_table OWNER TO hackaton_admin;")
                 await cur.execute("GRANT ALL PRIVILEGES ON DATABASE hackaton TO hackaton_admin;")
                 await conn.commit()
 
@@ -50,9 +50,32 @@ class DaBa:
         async with self.con.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
-                    "INSERT INTO admin (admin_login, admin_password) VALUES (%s, %s)",
+                    "INSERT INTO admin_table (admin_login, admin_password) VALUES (%s, %s)",
                     (login, password)
                 )
+                await conn.commit()
+
+    async def create_full_user_table(self):
+
+        async with self.con.connection() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute('DROP TABLE IF EXISTS "full_user";')
+                await cur.execute("""
+                      CREATE TABLE "full_user" (
+                          "user_id" int PRIMARY KEY,
+                          "email" VARCHAR,
+                          "login" VARCHAR,
+                          "support_level" INT ,
+                          "age" INT,
+                          "birthdate" DATE,
+                          "first_name" VARCHAR,
+                          "phone_number" VARCHAR,
+                          "middle_name" VARCHAR,
+                          "gender" VARCHAR,
+                          "last_name" VARCHAR
+                      );
+                  """)
+                await cur.execute("ALTER TABLE full_user OWNER TO hackaton_admin;")
                 await conn.commit()
 
     async def create_user_table(self):
@@ -61,8 +84,10 @@ class DaBa:
                 await cur.execute("DROP TABLE IF EXISTS user_info;")
                 await cur.execute("""CREATE TABLE user_info (
                     user_info_id serial PRIMARY KEY,
-                    user_id BIGINT NOT NULL,
-                    secret_info VARCHAR
+                    FOREIGN KEY  user_id  REFERENCES full_user ON DELETE CASCADE,
+                    secret_info VARCHAR,
+                    "endpoint" VARCHAR ,
+                    "timestamp" TIMESTAMP
                 );""")
                 await cur.execute("ALTER TABLE user_info OWNER TO hackaton_admin;")
                 await cur.execute("""
@@ -124,7 +149,8 @@ class DaBa:
         try:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
-                    await cursor.execute("SELECT a.admin_login a.admin_password FROM admin a")  # Замените на ваш запрос
+                    await cursor.execute(
+                        "SELECT a.admin_login a.admin_password FROM admin_table a")  # Замените на ваш запрос
                     result = await cursor.fetchall()
                     return result
         except Exception as ex:
@@ -137,7 +163,7 @@ class DaBa:
             async with self.con.connection() as conn:
                 async with conn.cursor() as cur:
                     await cur.execute(
-                        "SELECT * FROM admin a WHERE admin_login = %s AND admin_password = %s",
+                        "SELECT * FROM admin_table a WHERE admin_login = %s AND admin_password = %s",
                         (admin.adminLogin, admin.adminPassword)
                     )
                     result = await cur.fetchone()
@@ -155,7 +181,7 @@ class DaBa:
             async with self.con.connection() as conn:
                 async with conn.cursor() as cursor:
                     await cursor.execute(
-                        "INSERT INTO public.admin (admin_login, admin_password) VALUES (%s, %s)",
+                        "INSERT INTO public.admin_table (admin_login, admin_password) VALUES (%s, %s)",
                         (admin.adminLogin, admin.adminPassword)
                     )
                     result = "Данные сохранены"
@@ -236,31 +262,6 @@ class DaBa:
         except Exception as ex:
             print(f"Error: ", ex)
             return
-
-    async def create_full_user_table(self):
-
-        async with self.con.connection() as conn:
-            async with conn.cursor() as cur:
-                await cur.execute('DROP TABLE IF EXISTS "full_user";')
-                await cur.execute("""
-                    CREATE TABLE "full_user" (
-                        "user_id" int PRIMARY KEY,
-                        "email" VARCHAR,
-                        "endpoint" VARCHAR ,
-                        "login" VARCHAR,
-                        "support_level" INT ,
-                        "timestamp" TIMESTAMP,
-                        "age" INT,
-                        "birthdate" DATE,
-                        "first_name" VARCHAR,
-                        "phone_number" VARCHAR,
-                        "middle_name" VARCHAR,
-                        "gender" VARCHAR,
-                        "last_name" VARCHAR(50)
-                    );
-                """)
-                await cur.execute("ALTER TABLE full_user OWNER TO hackaton_admin;")
-                await conn.commit()
 
     async def create_source_reader_table(self):
 

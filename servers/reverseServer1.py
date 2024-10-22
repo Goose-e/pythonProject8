@@ -39,6 +39,12 @@ async def lifespan(scope, receive, send):
 servApp.router.lifespan = lifespan
 
 (publicKey, privateKey) = rsa.newkeys(2048)
+async def getAllAdmins():
+    try:
+        result = await dataBase.getAllAdmins()
+        return result
+    except Exception as ex:
+        print(f"Ошибка при получения информации: {ex}")
 
 
 @servApp.get("/getPublicKeyServer")
@@ -61,13 +67,6 @@ async def saveInfoInDB(userId, userData, flag):
             print("не чд")
     except Exception as ex:
         print(f"Ошибка при сохранении информации: {ex}")
-
-async def getAllAdmins():
-    try:
-        result = await dataBase.getAllAdmins()
-        return result
-    except Exception as ex:
-        print(f"Ошибка при получения информации: {ex}")
 
 
 @servApp.post("/getData")
@@ -106,7 +105,7 @@ async def proxy(request: Request):
         await MaskControl.changeMaskType(cheat)
         return "ok"
     except:
-        data['Message'], flag, text = Masking.maskData(data['Message'], int(maskType))
+        data['Message'], flag, text = Masking().maskData(data['Message'], int(maskType))
     await saveInfoInDB(data['UserID'], text, flag)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
