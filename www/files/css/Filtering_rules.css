@@ -1,0 +1,57 @@
+#icons-filter-page {
+  position: absolute;
+  width: 36px;
+  top: 30;
+}
+
+#stat {
+  position: absolute;
+  top: 86px;
+  left: 306px;
+  width: 333px;
+  height: 353px;
+  background: #1e2128ff; /* neutral-800 */
+  border-radius: 12px; /* border-xl */
+  border-width: 1px;
+  border-color: #bdc1caff; /* neutral-400 */
+  border-style: solid;
+}
+
+#rulesforinfo {
+  position: absolute;
+  top: 86px;
+  left: 679px;
+  width: 825px;
+  height: 353px;
+  background: #171a1fff; /* neutral-900 */
+  border-radius: 12px;
+  border-width: 1px;
+  border-color: #f3f4f6ff; /* neutral-200 */
+  border-style: solid;
+}
+
+#radios {
+  color: #fff133ff;
+  font-weight: 700;
+  font-family: "Inter", serif;
+  padding-left: 30px;
+  display: flex;
+  flex-direction: column; /* Располагает радиокнопки вертикально */
+  gap: 30px; /* Расстояние между радиокнопками */
+}
+
+#confirm {
+  position: absolute;
+  background-color: #fff133ff;
+  font-weight: 700;
+  font-family: "Inter", serif;
+  color: #171a1f;
+  border-radius: 4px;
+  width: 90px;
+  height: 30px;
+  right: 702px;
+  top: 270px;
+  padding-bottom: 2px;
+  padding-left: 10px;
+  text-decoration: none;
+}
