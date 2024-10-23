@@ -29,14 +29,12 @@ async def index():
     if request.method == "POST":
         check = await reverseServer1.getAllAdmins(request.form["email"],request.form["password"])
         print(check)
-        if len(check)==2:
-            if check != None:
-                LM = UserLogin().createUser(check)
-                login_user(LM)
-                return redirect("Main_menu.html")
-            else: return render_template("Registration_user.html")
-        else:
-            return render_template("Registration_user.html")
+        if check[0] != None:
+            LM = UserLogin().createUser(check)
+            login_user(LM)
+            print("ff")
+            return redirect("Main_menu.html")
+        else: return render_template("Registration_user.html")
     return render_template("Registration_user.html")
 
 
@@ -65,6 +63,12 @@ async def filter():
 @login_required
 def source():
     return render_template("data_sorce.html")
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect("Registration_user.html")
 
 
 if __name__ == "__main__":
