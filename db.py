@@ -77,7 +77,7 @@ class DaBa:
                           "birthdate" DATE,
                           "first_name" VARCHAR,
                           "phone_number" VARCHAR,
-                          "middle_name" VARCHAR,
+                          "second_name" VARCHAR,
                           "gender" VARCHAR,
                           "last_name" VARCHAR
                       );
