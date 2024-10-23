@@ -204,7 +204,8 @@ class DaBa:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
                     await cursor.execute(
-                        f"SELECT * FROM admin_table WHERE admin_login = %s and admin_password = %s",(login, password))  # Замените на ваш запрос
+                        f"SELECT * FROM admin_table WHERE admin_login = %s and admin_password = %s",
+                        (login, password))  # Замените на ваш запрос
                     result = await cursor.fetchall()
                     return result
         except Exception as ex:
@@ -315,7 +316,6 @@ class DaBa:
         try:
             # Получение нового соединения из пула
             async with self.con.connection() as conn:
-
                 async with conn.cursor() as cursor:
                     await cursor.execute("SELECT * FROM regular ORDER BY regular_id")
                     rows = await cursor.fetchall()
