@@ -11,10 +11,10 @@ import json
 import uvicorn
 
 import consts
-from database import db
+import db
 from consts import portS1, portC1
 from maskMethods import Masking
-from database.db import DaBa
+from db import DaBa
 from models.FullUser import FullUser
 from models.UserInfo import UserInfo
 from servers.IServer import IServer
@@ -28,7 +28,6 @@ class MyServer(IServer):
     async def getRegulars(self):
         regulars = await getRegulars(self)
         return regulars
-
 
 
 serverInstance = MyServer()
@@ -51,7 +50,9 @@ async def authAdmin(email, password):
         result = await dataBase.getAdminFromDB(email, password)
         return result
     except Exception as ex:
-        print(f"Ошибка при получения информации: {ex}")
+        print(f"Ошибка при получении информации: {ex}")
+        return None
+
 
 
 async def lifespan(scope, receive, send):
@@ -73,9 +74,6 @@ async def lifespan(scope, receive, send):
 servApp.router.lifespan = lifespan
 
 (publicKey, privateKey) = rsa.newkeys(2048)
-
-
-
 
 
 @servApp.get("/getPublicKeyServer")

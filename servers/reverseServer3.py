@@ -10,10 +10,10 @@ import httpx
 import json
 import uvicorn
 import consts
-from database import db
+import db
 from consts import portS3, portC1
 from maskMethods import Masking
-from database.db import DaBa
+from db import DaBa
 from models.FullUser import FullUser
 from models.UserInfo import UserInfo
 from servers.IServer import IServer

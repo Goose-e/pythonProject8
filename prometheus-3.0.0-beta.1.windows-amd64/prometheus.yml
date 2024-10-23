@@ -7,5 +7,5 @@ scrape_configs:
       - targets: [ 'localhost:5020' ]  # Адрес вашего приложения FastAPI
   - job_name: 'router2'
     static_configs:
-        - targets: [ 'localhost:5021' ]
+      - targets: [ 'localhost:5021' ]
 

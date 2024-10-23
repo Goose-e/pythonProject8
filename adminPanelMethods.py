@@ -1,4 +1,4 @@
-from database.db import DaBa
+from db import DaBa
 import asyncio
 import httpx
 from consts import portS1, portS2, portS3

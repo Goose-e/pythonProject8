@@ -1,15 +1,19 @@
 from flask import Flask, render_template, request, redirect
-from database import db
-from database.db import DaBa
+
 from UserLogin import UserLogin
 import asyncio
 from adminPanelMethods import adminControl
+import db
+from db import DaBa
+from models.Admin import Admin
 from servers import reverseServer1
 from flask_login import LoginManager, login_user, login_required, logout_user
 
+
+
 app = Flask(__name__, static_folder="www/files", template_folder="www")
 app.config["SECRET_KEY"] = "iojoijoijoijjijjkjlbhyuglftdfyugf7y"
-login_manager = LoginManager(app)
+login_manager=LoginManager(app)
 
 
 @login_manager.user_loader
@@ -23,14 +27,14 @@ def load_user(user_id):
 async def index():
     await db.initialize_pool()
     if request.method == "POST":
-        check = await reverseServer1.authAdmin(request.form["email"], request.form["password"])
+        check:Admin = await reverseServer1.authAdmin(request.form["email"],request.form["password"])
         print(check)
-        if check[0] != None:
+        if check.get_id() is not None:
             LM = UserLogin().createUser(check)
+            print(type(LM))
             login_user(LM)
             return redirect("Main_menu.html")
-        else:
-            return render_template("Registration_user.html")
+        else: return render_template("Registration_user.html")
     return render_template("Registration_user.html")
 
 
@@ -59,7 +63,6 @@ async def filter():
 @login_required
 def source():
     return render_template("data_sorce.html")
-
 
 @app.route("/logout")
 @login_required

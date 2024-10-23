@@ -1,17 +1,13 @@
-#Класс в данном виде не работает
-#Это просто обязательные методы для модуля flask_login
-
-
-class UserLogin():
+class UserLogin:
     def fromBD(self, userID, DB):
-        self.__user=DB.getUserID(userID)
-        return  self
+        self.__user = DB.getUserByID(userID)
+        return self
 
     def get_user(self):
         return self.__user
 
     def createUser(self, user):
-        self.__user=user
+        self.__user = user
         return self
 
     def is_authenticated(self):
@@ -20,8 +16,8 @@ class UserLogin():
     def is_active(self):
         return True
 
-    def is_anonnymous(self):
+    def is_anonymous(self):
         return False
 
     def get_id(self):
-        return str(self.__user[0])
+        return str(self.__user.adminId)
