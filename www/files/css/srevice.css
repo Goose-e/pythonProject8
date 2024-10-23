@@ -1,0 +1,78 @@
+.main-conteiner {
+  position: absolute;
+  top: 70px;
+  left: 80px;
+  width: 1349px;
+  height: 90%;
+  background: #171a1fff; /* neutral-900 */
+  border-radius: 12px;
+  border-width: 1px;
+  border-color: #bdc1caff; /* neutral-400 */
+  border-style: solid;
+}
+body {
+  background-color: black;
+}
+#name-table {
+  position: absolute;
+  top: 0px;
+  left: 28px;
+  font-family: "Archivo"; /* Heading */
+  font-size: 50px;
+  line-height: 84px;
+  font-weight: 700;
+  color: #ffee00ff;
+  margin: 0;
+}
+
+.table-1 {
+  margin: 100px 20px auto;
+  border-radius: 10px;
+  overflow-y: auto;
+  height: 600px;
+}
+
+table {
+  width: 100%;
+  text-align: center;
+}
+
+#first-string {
+  background-color: #9f9f9f;
+}
+
+#swords {
+  position: absolute;
+  top: 2px;
+  width: 60px;
+}
+
+#up_interface {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 1535px;
+  height: 56px;
+  background: #1e2128ff; /* neutral-800 */
+  border-radius: 0px;
+  box-shadow: 0px 0px 1px #171a1f, 0px 0px 2px #171a1f; /* shadow-xs */
+}
+#pagename {
+  position: absolute;
+  font-family: "Archivo", serif;
+  margin: 0;
+  top: 10px;
+  left: 80px;
+  font-size: 28px;
+  line-height: 42px;
+  font-weight: 700;
+  color: white;
+}
+
+.stoka_2 {
+  background-color: white;
+  height: 30px;
+}
+#width-id {
+  width: 600px;
+}

@@ -73,8 +73,8 @@ async def getAllAdmins(email, password):
 @servApp.get("/getPublicKeyServer")
 async def get_public_key():
     try:
-        publicKeyUnmade = publicKey.save_pkcs1(format='PEM')  # Преобразуем публичный ключ в формат PEM
-        return {"public_key": publicKeyUnmade.decode('utf-8')}  # Возвращаем строковое представление ключа
+        publicKeyUnmade = publicKey.save_pkcs1(format='PEM')
+        return {"public_key": publicKeyUnmade.decode('utf-8')}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -151,9 +151,10 @@ async def proxy(request: Request):
     except:
         data['Message'], flag, text = await Masking().maskData(data['Message'], int(maskType),myServer)
     await saveInfoInDB(data, text, flag)
+    data={"Endpoint":data["Endpoint"], "Message":data["Message"], "SupportLevel":data["SupportLevel"], "Timestamp":data["Timestamp"]}
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
-        response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=json.dumps(data['Message']))
+        response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=json.dumps(data))
     print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
     return "ok"
 
