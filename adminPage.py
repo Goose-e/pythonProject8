@@ -43,7 +43,8 @@ async def menu():
 @login_required
 async def filter():
     if request.method == "POST":
-        action_type = request.form["type"]
+        form_data = await request.form
+        action_type = form_data["type"]
         if action_type == "mask":
             await adminControl().changeMaskMethod(1)
         elif action_type == "delete":
