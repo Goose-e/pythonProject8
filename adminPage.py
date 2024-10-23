@@ -29,11 +29,14 @@ async def index():
     if request.method == "POST":
         check = await reverseServer1.getAllAdmins(request.form["email"],request.form["password"])
         print(check)
-        if check != None:
-            LM = UserLogin().createUser(check)
-            login_user(LM)
-            return redirect("Main_menu.html")
-        else: return render_template("Registration_user.html")
+        if len(check)==2:
+            if check != None:
+                LM = UserLogin().createUser(check)
+                login_user(LM)
+                return redirect("Main_menu.html")
+            else: return render_template("Registration_user.html")
+        else:
+            return render_template("Registration_user.html")
     return render_template("Registration_user.html")
 
 
