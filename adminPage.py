@@ -25,8 +25,8 @@ def load_user(user_id):
 @app.route("/Registration_user.html")
 @app.route("/Registration_user.html", methods=["POST"])
 async def index():
-    await db.initialize_pool()
     if request.method == "POST":
+        await db.initialize_pool()
         check:Admin = await reverseServer1.authAdmin(request.form["email"],request.form["password"])
         print(check)
         if check.get_id() is not None:
