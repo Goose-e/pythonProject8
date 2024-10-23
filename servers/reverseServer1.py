@@ -50,6 +50,15 @@ async def getAllAdmins(email, password):
     except Exception as ex:
         print(f"Ошибка при получения информации: {ex}")
 
+async def getRegulars():
+    try:
+        dataBase = db.DaBa1()
+        print(type(dataBase.con))
+        result = await dataBase.getAllRegulars()
+        return result
+    except Exception as ex:
+        print(f"Ошибка при получения информации: {ex}")
+
 
 @servApp.get("/getPublicKeyServer")
 async def get_public_key():

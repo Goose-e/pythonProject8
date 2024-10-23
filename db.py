@@ -457,7 +457,9 @@ async def main():
     await test_db_connection()  # Тест подключения к базе данных
     data = DaBa()
     print(type(data.con))
-    str = 'r"""(?<!\w)(\+?\d{1,3}[-\s]?)?\(?\d{3}\)?[-\s]?\d{1,3}[-\s]?\d{1,2}[-\s]?\d{2,3}(?!\w)"""'
+    str = r'r"""(?<!\w)(\+?\d{1,3}[-\s]?)?\(?\d{3}\)?[-\s]?\d{1,3}[-\s]?\d{1,2}[-\s]?\d{2,3}(?!\w)"""'
+    await data.saveInfoInRegular(str)
+    str = r'r"""\b\d{4}[-\s]?\d{6}\b|\b[А-Я]{2}\d{7}\b"""'
     await data.saveInfoInRegular(str)
     all = await data.getAllRegulars()
     print(all)

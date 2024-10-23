@@ -1,10 +1,12 @@
 import re
 from enumMask import Mask
-
+from db import DaBa
+from servers import reverseServer1
+import asyncio
 
 class Masking():
     @staticmethod
-    def maskData(text, maskType):
+    async def maskData(text, maskType):
         # 1. Мобильные телефоны
         phone_pattern = re.compile(r"""
             (?<!\w)                            # Убедимся, что перед номером нет букв
@@ -67,7 +69,9 @@ class Masking():
         """, re.VERBOSE)
         if maskType == 1:
             print(maskType)
+            regularsList = await reverseServer1.getRegulars()
             text1 = text
+            '''
             text = phone_pattern.sub("***", text)
             text = passport_pattern.sub("***", text)
             text = card_pattern.sub("***", text)
@@ -77,7 +81,10 @@ class Masking():
             text = address_pattern.sub("***", text)
             text = reg_num_pattern.sub("***", text)
             text = diploma_pattern.sub("***", text)
-
+            '''
+            for i in regularsList:
+                regulator= re.compile(i.regular_expression)
+                text = regulator.sub("***", text)
             def maskRemainingDigits(text):
                 text = re.sub(r'\b\d{4,}\b', '***', text)
                 text = re.sub(r'\*\*\*\d{2,4}', '***', text)
