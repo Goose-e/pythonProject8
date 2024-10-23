@@ -22,8 +22,8 @@ def load_user(user_id):
 
 
 @app.route("/")
-@app.route("/Registration_user.html")
-@app.route("/Registration_user.html", methods=["POST"])
+@app.route("/Registration_user")
+@app.route("/Registration_user", methods=["POST"])
 async def index():
     await db.initialize_pool()
     if request.method == "POST":
@@ -32,20 +32,19 @@ async def index():
         if check[0] != None:
             LM = UserLogin().createUser(check)
             login_user(LM)
-            print("ff")
-            return redirect("Main_menu.html")
+            return redirect("Main_menu")
         else: return render_template("Registration_user.html")
     return render_template("Registration_user.html")
 
 
-@app.route("/Main_menu.html")
+@app.route("/Main_menu")
 @login_required
 def menu():
     return render_template("Main_menu.html")
 
 
-@app.route("/Filtering_rules.html")
-@app.route("/Filtering_rules.html", methods=["POST"])
+@app.route("/Filtering_rules")
+@app.route("/Filtering_rules", methods=["POST"])
 @login_required
 async def filter():
     if request.method == "POST":
@@ -59,7 +58,7 @@ async def filter():
     return render_template("Filtering_rules.html")
 
 
-@app.route("/data_sorce.html")
+@app.route("/data_sorce")
 @login_required
 def source():
     return render_template("data_sorce.html")

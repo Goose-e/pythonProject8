@@ -461,6 +461,18 @@ async def main():
     await data.saveInfoInRegular(str)
     str = r'r"""\b\d{4}[-\s]?\d{6}\b|\b[А-Я]{2}\d{7}\b"""'
     await data.saveInfoInRegular(str)
+    str = r'r"""(?<!\w)(?:\d{4}[-\s]?){3}\d{4}\b|\d{16}\b"""'
+    await data.saveInfoInRegular(str)
+    str = r'r"""(?<!\w)(?:\d{4}[-\s]?){4}\d{4}\b"""'
+    await data.saveInfoInRegular(str)
+    str = r'r"""(\b\d{2}[-./]\d{2}[-./]\d{4}\b)|(\b\d{4}[-./]\d{2}[-./]\d{2}\b)|(\b\d{2}\s\w{3,}\s\d{4}\b)"""'
+    await data.saveInfoInRegular(str)
+    str = r'r"""(?<!\w)(Россия|г\.\s?[А-Яа-яЁё]+|г[-]?\s?[А-Яа-яЁё]+|ул\.\s?[А-Яа-яЁё]+|пер\.\s?[А-Яа-яЁё]+|д\.\s?\d+|кв\.\s?\d+|дом\s?\d+)"""'
+    await data.saveInfoInRegular(str)
+    str = r'r"""(?<!\w)\d{2}[-\s]?\d{3}[-\s]?\d{3}(?!\w)"""'
+    await data.saveInfoInRegular(str)
+    str = r'r"""(?<!\w)ДК[-\s]?\d{8}\b|[А-Я]{2}[-\s]?\d{8}\b"""'
+    await data.saveInfoInRegular(str)
     all = await data.getAllRegulars()
     print(all)
 
