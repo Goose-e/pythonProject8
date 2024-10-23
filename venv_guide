@@ -6,3 +6,6 @@ pip install -r requirements.txt  # Установка зависимостей
 
 Когда вы установили новый пакет или удалили старый, вам нужно запустить команду:
 pip freeze > requirements.txt
+
+http://localhost:3000/ admin admin grafana
+http://localhost:9090/ prometheus
