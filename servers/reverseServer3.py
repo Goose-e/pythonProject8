@@ -27,6 +27,10 @@ class MyServer(IServer):
         regulars = await getRegulars(self)
         return regulars
 
+    async def authAdmin(self, email, password):
+        admin = await authAdmin(email, password)
+        return admin
+
 
 async def getRegulars(self):
     try:
@@ -62,11 +66,11 @@ servApp.router.lifespan = lifespan
 (publicKey, privateKey) = rsa.newkeys(2048)
 
 
-async def getAllAdmins(email, password):
+async def authAdmin(email, password):
     try:
         dataBase = db.DaBa1()
         print(type(dataBase.con))
-        result = await dataBase.getUser(email, password)
+        result = await dataBase.getAdminFromDB(email, password)
         return result
     except Exception as ex:
         print(f"Ошибка при получения информации: {ex}")
@@ -156,7 +160,7 @@ async def proxy(request: Request):
         await MaskControl.changeMaskType(cheat)
         return "ok"
     except:
-        data['Message'], flag, text = await Masking().maskData(data['Message'], int(maskType),myServer)
+        data['Message'], flag, text = await Masking().maskData(data['Message'], int(maskType), myServer)
     await saveInfoInDB(data, text, flag)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:

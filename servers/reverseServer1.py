@@ -9,6 +9,7 @@ from Cryptodome.Cipher import AES
 import httpx
 import json
 import uvicorn
+
 import consts
 from database import db
 from consts import portS1, portC1
@@ -23,9 +24,14 @@ dataBase: DaBa
 
 
 class MyServer(IServer):
+
     async def getRegulars(self):
         regulars = await getRegulars(self)
         return regulars
+
+
+
+serverInstance = MyServer()
 
 
 async def getRegulars(self):
@@ -38,7 +44,14 @@ async def getRegulars(self):
         print(f"Ошибка при получения информации: {ex}")
 
 
-myServer = MyServer()
+async def authAdmin(email, password):
+    try:
+        dataBase = db.DaBa1()
+        print(type(dataBase.con))
+        result = await dataBase.getAdminFromDB(email, password)
+        return result
+    except Exception as ex:
+        print(f"Ошибка при получения информации: {ex}")
 
 
 async def lifespan(scope, receive, send):
@@ -62,14 +75,7 @@ servApp.router.lifespan = lifespan
 (publicKey, privateKey) = rsa.newkeys(2048)
 
 
-async def getAllAdmins(email, password):
-    try:
-        dataBase = db.DaBa1()
-        print(type(dataBase.con))
-        result = await dataBase.getUser(email, password)
-        return result
-    except Exception as ex:
-        print(f"Ошибка при получения информации: {ex}")
+
 
 
 @servApp.get("/getPublicKeyServer")
@@ -156,7 +162,7 @@ async def proxy(request: Request):
         await MaskControl.changeMaskType(cheat)
         return "ok"
     except:
-        data['Message'], flag, text = await Masking().maskData(data['Message'], int(maskType), myServer)
+        data['Message'], flag, text = await Masking().maskData(data['Message'], int(maskType), serverInstance)
     await saveInfoInDB(data, text, flag)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:

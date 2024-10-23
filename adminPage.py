@@ -7,11 +7,9 @@ from adminPanelMethods import adminControl
 from servers import reverseServer1
 from flask_login import LoginManager, login_user, login_required, logout_user
 
-
-
 app = Flask(__name__, static_folder="www/files", template_folder="www")
 app.config["SECRET_KEY"] = "iojoijoijoijjijjkjlbhyuglftdfyugf7y"
-login_manager=LoginManager(app)
+login_manager = LoginManager(app)
 
 
 @login_manager.user_loader
@@ -25,13 +23,14 @@ def load_user(user_id):
 async def index():
     await db.initialize_pool()
     if request.method == "POST":
-        check = await reverseServer1.getAllAdmins(request.form["email"],request.form["password"])
+        check = await reverseServer1.authAdmin(request.form["email"], request.form["password"])
         print(check)
         if check[0] != None:
             LM = UserLogin().createUser(check)
             login_user(LM)
             return redirect("Main_menu.html")
-        else: return render_template("Registration_user.html")
+        else:
+            return render_template("Registration_user.html")
     return render_template("Registration_user.html")
 
 
@@ -60,6 +59,7 @@ async def filter():
 @login_required
 def source():
     return render_template("data_sorce.html")
+
 
 @app.route("/logout")
 @login_required
