@@ -1,44 +1,42 @@
 from asyncio import WindowsSelectorEventLoopPolicy
-from UserLogin import fromBD
-from flask import Flask, render_template, request, redirect
-import db
-from db import DaBa
-from UserLogin import UserLogin
+from quart import Quart, render_template, request, redirect
 import asyncio
+from quart_auth import (
+    AuthUser, current_user, login_required, login_user, logout_user, QuartAuth
+)
+from UserLogin import UserLogin, createUser
 from adminPanelMethods import adminControl
 from servers import reverseServer1
-from flask_login import LoginManager, login_user, login_required, logout_user
+import db
 
-app = Flask(__name__, static_folder="www/files", template_folder="www")
+app = Quart(__name__, static_folder="www/files", template_folder="www")
 app.config["SECRET_KEY"] = "iojoijoijoijjijjkjlbhyuglftdfyugf7y"
-login_manager = LoginManager(app)
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    return asyncio.get_running_loop().run_until_complete(fromBD(user_id, DaBa()))
+auth_manager = QuartAuth(app)
+app.secret_key = "iojoijoijoijjijjkjlbhyuglftdfyugf7y"
 
 @app.route("/", methods=["GET", "POST"])
 @app.route("/Registration_user.html", methods=["GET", "POST"])
 async def index():
-    await db.initialize_pool()
+    await db.initialize_pool()  # Инициализация пула соединений
     if request.method == "POST":
-        check = await reverseServer1.authAdmin(request.form["email"], request.form["password"])
-        print(check)
+        form_data = await request.form  # Ожидаем выполнения корутины
+        email = form_data['email']
+        password = form_data['password']
+        check = await reverseServer1.authAdmin(email, password)
         if check and check.get_id() is not None:
-            LM = UserLogin()
-            await LM.createUser(check)
-            login_user(LM.get_user())
-            return redirect("Main_menu.html")
+            user = createUser(check)  # Создание экземпляра UserLogin
+            login_user(AuthUser(2))  # Аутентификация пользователя
+            return redirect("/Main_menu.html")
         else:
-            return render_template("Registration_user.html")
-    return render_template("Registration_user.html")
+            return await render_template("Registration_user.html", error="Неверный логин или пароль")
+
+    return await render_template("Registration_user.html")
 
 
 @app.route("/Main_menu.html")
 @login_required
-def menu():
-    return render_template("Main_menu.html")
+async def menu():
+    return await render_template("Main_menu.html")
 
 
 @app.route("/Filtering_rules.html", methods=["GET", "POST"])
@@ -53,22 +51,22 @@ async def filter():
         elif action_type == "filter":
             await adminControl().changeMaskMethod(3)
         return redirect("Filtering_rules.html")
-    return render_template("Filtering_rules.html")
+    return await render_template("Filtering_rules.html")
 
 
 @app.route("/data_source.html")
 @login_required
-def source():
-    return render_template("data_source.html")
+async def source():
+    return await render_template("data_source.html")
 
 
 @app.route("/logout")
 @login_required
-def logout():
-    logout_user()
+async def logout():
+    await logout_user()  # Выход пользователя
     return redirect("Registration_user.html")
 
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
-    app.run(host='0.0.0.0', port=5052, debug=True)
+    app.run(host='127.0.0.1', port=5051, debug=True)

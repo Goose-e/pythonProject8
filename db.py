@@ -16,15 +16,15 @@ asyncConnectionPool = None
 
 async def close_pool():
     global asyncConnectionPool
-    if asyncConnectionPool:
-        await asyncConnectionPool.close()
+    # if asyncConnectionPool:
+    #     # await asyncConnectionPool.close()
 
 
 async def initialize_pool():
     global asyncConnectionPool
     try:
         asyncConnectionPool = AsyncConnectionPool(
-            f"dbname=hackaton user=hackaton_admin password='admin' host='localhost'",
+            f"dbname=hackaton user=hackaton_admin password='admin' host='127.0.0.1'",
             min_size=1,
             max_size=1000,
         )
