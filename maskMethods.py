@@ -1,12 +1,10 @@
 import re
-from enumMask import Mask
-from db import DaBa
-from servers import reverseServer1
-import asyncio
+from servers import IServer
+
 
 class Masking():
     @staticmethod
-    async def maskData(text, maskType):
+    async def maskData(text, maskType,serverInstance: IServer):
         # 1. Мобильные телефоны
         phone_pattern = re.compile(r"""
             (?<!\w)                            # Убедимся, что перед номером нет букв
@@ -67,9 +65,12 @@ class Masking():
             ДК[-\s]?\d{8}\b|                   # Диплом в формате ДК00123456 или ДК 00123456
             [А-Я]{2}[-\s]?\d{8}\b               # Другие форматы дипломов
         """, re.VERBOSE)
+
+        regularsList = await serverInstance.getRegulars()
+
         if maskType == 1:
             print(maskType)
-            regularsList = await reverseServer1.getRegulars()
+
             text1 = text
             '''
             text = phone_pattern.sub("***", text)
@@ -83,8 +84,9 @@ class Masking():
             text = diploma_pattern.sub("***", text)
             '''
             for i in regularsList:
-                regulator= re.compile(i.regular_expression)
+                regulator = re.compile(i.regular_expression)
                 text = regulator.sub("***", text)
+
             def maskRemainingDigits(text):
                 text = re.sub(r'\b\d{4,}\b', '***', text)
                 text = re.sub(r'\*\*\*\d{2,4}', '***', text)
@@ -125,15 +127,15 @@ class Masking():
             text = address_pattern.sub("***", text)
             text = reg_num_pattern.sub("***", text)
             text = diploma_pattern.sub("***", text)
+            return text, (text1 == text), text1
 
-
-            def maskRemainingDigits(text):
-                text = re.sub(r'\b\d{4,}\b', '***', text)
-                text = re.sub(r'\*\*\*\d{2,4}', '***', text)
-                return text
-
-            text = maskRemainingDigits(text)
-            if text1 != text:
-                return False
-            else:
-                return text, (text1 == text), text1
+        def maskRemainingDigits(text):
+            text = re.sub(r'\b\d{4,}\b', '***', text)
+            text = re.sub(r'\*\*\*\d{2,4}', '***', text)
+            return text
+        text1 = text
+        text = maskRemainingDigits(text)
+        if text1 != text:
+            return False
+        else:
+            return text, (text1 == text), text1

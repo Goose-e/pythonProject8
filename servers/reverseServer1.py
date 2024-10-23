@@ -4,7 +4,6 @@ from asyncio import WindowsSelectorEventLoopPolicy
 import rsa
 from fastapi import FastAPI, Request
 from Cryptodome.Cipher import AES
-
 import httpx
 import json
 import uvicorn
@@ -15,9 +14,29 @@ from maskMethods import Masking
 from db import DaBa
 from models.FullUser import FullUser
 from models.UserInfo import UserInfo
+from servers.IServer import IServer
 
 servApp = FastAPI()
 dataBase: DaBa
+
+
+class MyServer(IServer):
+    async def getRegulars(self):
+        regulars = await getRegulars(self)
+        return regulars
+
+
+async def getRegulars(self):
+    try:
+        dataBase = db.DaBa1()
+        print(type(dataBase.con))
+        result = await dataBase.getAllRegulars()
+        return result
+    except Exception as ex:
+        print(f"Ошибка при получения информации: {ex}")
+
+
+myServer = MyServer()
 
 
 async def lifespan(scope, receive, send):
@@ -45,16 +64,7 @@ async def getAllAdmins(email, password):
     try:
         dataBase = db.DaBa1()
         print(type(dataBase.con))
-        result = await dataBase.getUser(email,password)
-        return result
-    except Exception as ex:
-        print(f"Ошибка при получения информации: {ex}")
-
-async def getRegulars():
-    try:
-        dataBase = db.DaBa1()
-        print(type(dataBase.con))
-        result = await dataBase.getAllRegulars()
+        result = await dataBase.getUser(email, password)
         return result
     except Exception as ex:
         print(f"Ошибка при получения информации: {ex}")
@@ -74,7 +84,7 @@ async def saveInfoInDB(data, Message, flag):
         print(data, Message, flag)
         if not flag:
             userInfo = UserInfo(
-                userInfoId= 0,
+                userInfoId=0,
                 userId=data['UserID'],
                 secretInfo=Message,
                 endpoint=data['Endpoint'],
@@ -102,7 +112,7 @@ async def decode(request: Request):
             userData = json.loads(userData)
         print(f"Расшифрованные данные: {userData}")
         user = await dataBase.findUserByUserId(userData['UserID'])
-        #↓☠️☠️
+        # ↓☠️☠️
         if user is None:
             user = FullUser(
                 user_id=userData['UserID'],
@@ -139,7 +149,7 @@ async def proxy(request: Request):
         await MaskControl.changeMaskType(cheat)
         return "ok"
     except:
-        data['Message'], flag, text = Masking().maskData(data['Message'], int(maskType))
+        data['Message'], flag, text = await Masking().maskData(data['Message'], int(maskType),myServer)
     await saveInfoInDB(data, text, flag)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
