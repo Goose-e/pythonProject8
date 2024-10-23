@@ -37,7 +37,7 @@ async def clientStart():
                         publicKey = rsa.PublicKey.load_pkcs1(publicKeyUnmade.encode('utf-8'))
                         url = routers[current_router]
                         data = encrypt_data(data, publicKey)
-                        response = await client.post(f"{url}/sendData", json=json.dumps(data))
+                        response = await client.post(f"{url}/send", json=json.dumps(data))
                         print(f"Отправлено: {data}, Ответ: {response.status_code}")
                         current_router = (current_router + 1) % len(routers)
                     else:

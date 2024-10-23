@@ -8,3 +8,4 @@ scrape_configs:
   - job_name: 'router2'
     static_configs:
         - targets: [ 'localhost:5021' ]
+
