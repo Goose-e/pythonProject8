@@ -7,6 +7,6 @@ class UserInfo:
     userId: int
     secretInfo: str
     endpoint: str
-    timestamp: datetime
+    timestamp: str
 
 

@@ -69,7 +69,7 @@ class DaBa:
                 await cur.execute('DROP TABLE IF EXISTS "full_user";')
                 await cur.execute("""
                       CREATE TABLE "full_user" (
-                          "user_id" int PRIMARY KEY,
+                          "user_id" BIGINT  PRIMARY KEY,
                           "email" VARCHAR,
                           "login" VARCHAR,
                           "support_level" varchar ,
@@ -77,7 +77,7 @@ class DaBa:
                           "birthdate" DATE,
                           "first_name" VARCHAR,
                           "phone_number" VARCHAR,
-                          "middle_name" VARCHAR,
+                          "second_name" VARCHAR,
                           "gender" VARCHAR,
                           "last_name" VARCHAR
                       );
@@ -91,7 +91,7 @@ class DaBa:
                 await cur.execute("DROP TABLE IF EXISTS user_info;")
                 await cur.execute("""CREATE TABLE user_info (
                     user_info_id serial PRIMARY KEY,
-                    user_id int not null, 
+                    user_id BIGINT  not null, 
                      FOREIGN KEY  (user_id)  REFERENCES full_user(user_id) ON DELETE CASCADE,
                     secret_info VARCHAR,
                     endpoint_place VARCHAR ,
