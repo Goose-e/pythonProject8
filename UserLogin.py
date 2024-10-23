@@ -1,6 +1,7 @@
 class UserLogin:
     async def fromBD(self, userID, DB):
         self.__user = await DB.getUserByID(userID)
+        self.is_authenticated = True
         return self
 
     def get_user(self):
@@ -10,7 +11,7 @@ class UserLogin:
         self.__user = user
         return self
 
-    def is_authenticated(self):
+    async def is_authenticated(self):
         return True
 
     def is_active(self):
