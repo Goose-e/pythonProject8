@@ -1,6 +1,8 @@
 import asyncio
 import base64
 from asyncio import WindowsSelectorEventLoopPolicy
+from datetime import datetime
+
 import rsa
 from fastapi import FastAPI, Request
 from Cryptodome.Cipher import AES
@@ -113,6 +115,12 @@ async def decode(request: Request):
         print(f"Расшифрованные данные: {userData}")
         user = await dataBase.findUserByUserId(userData['UserID'])
         # ↓☠️☠️
+        birthdate_str = userData.get('Дата рождения')
+        # ↓☠️☠️
+        if birthdate_str:
+            birthdate = datetime.strptime(birthdate_str, '%d.%m.%Y').date()
+        else:
+            birthdate = None  # Или можно установить другое значение по умолчанию
         if user is None:
             user = FullUser(
                 user_id=userData['UserID'],
@@ -120,7 +128,7 @@ async def decode(request: Request):
                 login=userData['Login'],
                 support_level=userData['SupportLevel'],
                 age=userData.get('Возраст'),
-                birthdate=userData.get('Дата рождения'),
+                birthdate=birthdate,
                 first_name=userData.get('Имя'),
                 second_name=userData.get('Фамилия'),
                 last_name=userData.get('Отчество'),
