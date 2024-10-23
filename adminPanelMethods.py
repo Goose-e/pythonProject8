@@ -1,8 +1,7 @@
-from servers import reverseServer1
-from db import DaBa
+from database.db import DaBa
 import asyncio
 import httpx
-from consts import portS1, portS2, portS3, portC1
+from consts import portS1, portS2, portS3
 
 
 class adminControl():

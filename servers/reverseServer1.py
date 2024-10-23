@@ -1,6 +1,8 @@
 import asyncio
 import base64
 from asyncio import WindowsSelectorEventLoopPolicy
+from datetime import datetime
+
 import rsa
 from fastapi import FastAPI, Request
 from Cryptodome.Cipher import AES
@@ -8,10 +10,10 @@ import httpx
 import json
 import uvicorn
 import consts
-import db
+from database import db
 from consts import portS1, portC1
 from maskMethods import Masking
-from db import DaBa
+from database.db import DaBa
 from models.FullUser import FullUser
 from models.UserInfo import UserInfo
 from servers.IServer import IServer
@@ -112,7 +114,12 @@ async def decode(request: Request):
             userData = json.loads(userData)
         print(f"Расшифрованные данные: {userData}")
         user = await dataBase.findUserByUserId(userData['UserID'])
+        birthdate_str = userData.get('Дата рождения')
         # ↓☠️☠️
+        if birthdate_str:
+            birthdate = datetime.strptime(birthdate_str, '%d.%m.%Y').date()
+        else:
+            birthdate = None  # Или можно установить другое значение по умолчанию
         if user is None:
             user = FullUser(
                 user_id=userData['UserID'],
@@ -120,7 +127,7 @@ async def decode(request: Request):
                 login=userData['Login'],
                 support_level=userData['SupportLevel'],
                 age=userData.get('Возраст'),
-                birthdate=userData.get('Дата рождения'),
+                birthdate=birthdate,
                 first_name=userData.get('Имя'),
                 second_name=userData.get('Фамилия'),
                 last_name=userData.get('Отчество'),
@@ -149,7 +156,7 @@ async def proxy(request: Request):
         await MaskControl.changeMaskType(cheat)
         return "ok"
     except:
-        data['Message'], flag, text = await Masking().maskData(data['Message'], int(maskType),myServer)
+        data['Message'], flag, text = await Masking().maskData(data['Message'], int(maskType), myServer)
     await saveInfoInDB(data, text, flag)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:

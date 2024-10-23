@@ -1,13 +1,11 @@
-import sqlite3
-from flask import Flask, render_template, request, redirect, flash
-from werkzeug.security import generate_password_hash, check_password_hash
-import db
-from db import DaBa
+from flask import Flask, render_template, request, redirect
+from database import db
+from database.db import DaBa
 from UserLogin import UserLogin
 import asyncio
 from adminPanelMethods import adminControl
-from servers import reverseServer1, reverseServer2, reverseServer3
-from flask_login import LoginManager, login_user, login_required, current_user, logout_user
+from servers import reverseServer1
+from flask_login import LoginManager, login_user, login_required, logout_user
 
 
 
