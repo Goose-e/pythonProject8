@@ -1,12 +1,15 @@
 import asyncio
 import base64
 from asyncio import WindowsSelectorEventLoopPolicy
+from datetime import datetime
+
 import rsa
 from fastapi import FastAPI, Request
 from Cryptodome.Cipher import AES
 import httpx
 import json
 import uvicorn
+
 import consts
 import db
 from consts import portS1, portC1
@@ -21,9 +24,13 @@ dataBase: DaBa
 
 
 class MyServer(IServer):
+
     async def getRegulars(self):
         regulars = await getRegulars(self)
         return regulars
+
+
+serverInstance = MyServer()
 
 
 async def getRegulars(self):
@@ -36,7 +43,16 @@ async def getRegulars(self):
         print(f"Ошибка при получения информации: {ex}")
 
 
-myServer = MyServer()
+async def authAdmin(email, password):
+    try:
+        dataBase = db.DaBa1()
+        print(type(dataBase.con))
+        result = await dataBase.getAdminFromDB(email, password)
+        return result
+    except Exception as ex:
+        print(f"Ошибка при получении информации: {ex}")
+        return None
+
 
 
 async def lifespan(scope, receive, send):
@@ -58,16 +74,6 @@ async def lifespan(scope, receive, send):
 servApp.router.lifespan = lifespan
 
 (publicKey, privateKey) = rsa.newkeys(2048)
-
-
-async def getAllAdmins(email, password):
-    try:
-        dataBase = db.DaBa1()
-        print(type(dataBase.con))
-        result = await dataBase.getUser(email, password)
-        return result
-    except Exception as ex:
-        print(f"Ошибка при получения информации: {ex}")
 
 
 @servApp.get("/getPublicKeyServer")
@@ -112,7 +118,12 @@ async def decode(request: Request):
             userData = json.loads(userData)
         print(f"Расшифрованные данные: {userData}")
         user = await dataBase.findUserByUserId(userData['UserID'])
+        birthdate_str = userData.get('Дата рождения')
         # ↓☠️☠️
+        if birthdate_str:
+            birthdate = datetime.strptime(birthdate_str, '%d.%m.%Y').date()
+        else:
+            birthdate = None  # Или можно установить другое значение по умолчанию
         if user is None:
             user = FullUser(
                 user_id=userData['UserID'],
@@ -120,7 +131,7 @@ async def decode(request: Request):
                 login=userData['Login'],
                 support_level=userData['SupportLevel'],
                 age=userData.get('Возраст'),
-                birthdate=userData.get('Дата рождения'),
+                birthdate=birthdate,
                 first_name=userData.get('Имя'),
                 second_name=userData.get('Фамилия'),
                 last_name=userData.get('Отчество'),
@@ -149,7 +160,7 @@ async def proxy(request: Request):
         await MaskControl.changeMaskType(cheat)
         return "ok"
     except:
-        data['Message'], flag, text = await Masking().maskData(data['Message'], int(maskType),myServer)
+        data['Message'], flag, text = await Masking().maskData(data['Message'], int(maskType), serverInstance)
     await saveInfoInDB(data, text, flag)
     data={"Endpoint":data["Endpoint"], "Message":data["Message"], "SupportLevel":data["SupportLevel"], "Timestamp":data["Timestamp"]}
     print(data)

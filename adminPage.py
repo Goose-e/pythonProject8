@@ -1,13 +1,13 @@
-import sqlite3
-from flask import Flask, render_template, request, redirect, flash
-from werkzeug.security import generate_password_hash, check_password_hash
-import db
-from db import DaBa
+from flask import Flask, render_template, request, redirect
+
 from UserLogin import UserLogin
 import asyncio
 from adminPanelMethods import adminControl
-from servers import reverseServer1, reverseServer2, reverseServer3
-from flask_login import LoginManager, login_user, login_required, current_user, logout_user
+import db
+from db import DaBa
+from models.Admin import Admin
+from servers import reverseServer1
+from flask_login import LoginManager, login_user, login_required, logout_user
 
 
 
@@ -27,10 +27,11 @@ def load_user(user_id):
 async def index():
     await db.initialize_pool()
     if request.method == "POST":
-        check = await reverseServer1.getAllAdmins(request.form["email"],request.form["password"])
+        check:Admin = await reverseServer1.authAdmin(request.form["email"],request.form["password"])
         print(check)
-        if check[0] != None:
-            LM = UserLogin().createUser(check)
+        if check.get_id() is not None:
+            LM = await UserLogin().createUser(check)
+            print(type(LM))
             login_user(LM)
             return redirect("Main_menu.html")
         else: return render_template("Registration_user.html")

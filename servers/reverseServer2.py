@@ -1,23 +1,47 @@
 import asyncio
 import base64
 from asyncio import WindowsSelectorEventLoopPolicy
+from datetime import datetime
+
 import rsa
 from fastapi import FastAPI, Request
 from Cryptodome.Cipher import AES
-
 import httpx
 import json
 import uvicorn
 import consts
 import db
-from consts import  portC1
+from consts import portS2, portC1
 from maskMethods import Masking
 from db import DaBa
 from models.FullUser import FullUser
 from models.UserInfo import UserInfo
+from servers.IServer import IServer
 
 servApp = FastAPI()
 dataBase: DaBa
+
+
+class MyServer(IServer):
+    async def getRegulars(self):
+        regulars = await getRegulars(self)
+        return regulars
+
+    async def authAdmin(self, email, password):
+        admin = await authAdmin(email, password)
+        return admin
+
+async def getRegulars(self):
+    try:
+        dataBase = db.DaBa1()
+        print(type(dataBase.con))
+        result = await dataBase.getAllRegulars()
+        return result
+    except Exception as ex:
+        print(f"Ошибка при получения информации: {ex}")
+
+
+myServer = MyServer()
 
 
 async def lifespan(scope, receive, send):
@@ -41,11 +65,11 @@ servApp.router.lifespan = lifespan
 (publicKey, privateKey) = rsa.newkeys(2048)
 
 
-async def getAllAdmins():
+async def authAdmin(email, password):
     try:
         dataBase = db.DaBa1()
         print(type(dataBase.con))
-        result = await dataBase.getAllAdmins()
+        result = await dataBase.getAdminFromDB(email, password)
         return result
     except Exception as ex:
         print(f"Ошибка при получения информации: {ex}")
@@ -65,7 +89,7 @@ async def saveInfoInDB(data, Message, flag):
         print(data, Message, flag)
         if not flag:
             userInfo = UserInfo(
-                userInfoId= 0,
+                userInfoId=0,
                 userId=data['UserID'],
                 secretInfo=Message,
                 endpoint=data['Endpoint'],
@@ -94,6 +118,12 @@ async def decode(request: Request):
         print(f"Расшифрованные данные: {userData}")
         user = await dataBase.findUserByUserId(userData['UserID'])
         # ↓☠️☠️
+        birthdate_str = userData.get('Дата рождения')
+        # ↓☠️☠️
+        if birthdate_str:
+            birthdate = datetime.strptime(birthdate_str, '%d.%m.%Y').date()
+        else:
+            birthdate = None  # Или можно установить другое значение по умолчанию
         if user is None:
             user = FullUser(
                 user_id=userData['UserID'],
@@ -101,7 +131,7 @@ async def decode(request: Request):
                 login=userData['Login'],
                 support_level=userData['SupportLevel'],
                 age=userData.get('Возраст'),
-                birthdate=userData.get('Дата рождения'),
+                birthdate=birthdate,
                 first_name=userData.get('Имя'),
                 second_name=userData.get('Фамилия'),
                 last_name=userData.get('Отчество'),
@@ -110,7 +140,7 @@ async def decode(request: Request):
             )
             await dataBase.saveFullUser(user)
         async with httpx.AsyncClient() as client:
-            response = await client.post(f"http://127.0.0.1:{consts.portS1}/proxy/", json=userData)
+            response = await client.post(f"http://127.0.0.1:{portS2}/proxy/", json=userData)
             print(f"Ответ от proxy: {response.status_code}, {response.text}")
         return "Отправлено"
     except Exception as e:
@@ -130,7 +160,7 @@ async def proxy(request: Request):
         await MaskControl.changeMaskType(cheat)
         return "ok"
     except:
-        data['Message'], flag, text = Masking().maskData(data['Message'], int(maskType))
+        data['Message'], flag, text = await Masking().maskData(data['Message'], int(maskType),myServer)
     await saveInfoInDB(data, text, flag)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
@@ -178,4 +208,4 @@ class MaskControl():
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
-    uvicorn.run("reverseServer2:servApp", host="127.0.0.1", port=consts.portS2, reload=True, lifespan="on")
+    uvicorn.run("reverseServer2:servApp", host="127.0.0.1", port=portS2, reload=True, lifespan="on")

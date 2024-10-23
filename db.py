@@ -16,6 +16,8 @@ asyncConnectionPool = None
 
 async def close_pool():
     global asyncConnectionPool
+    if asyncConnectionPool:
+        await asyncConnectionPool.close()
 
 
 async def initialize_pool():
@@ -199,7 +201,7 @@ class DaBa:
             print(f"Error: ", ex)
             return
 
-    async def getUser(self, login, password):
+    async def getAdmin(self, login, password):
         try:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
@@ -212,17 +214,16 @@ class DaBa:
             print(f"Error: ", ex)
             return False
 
-    async def getUserID(self, login):
+    async def getUserByID(self, login):
         try:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
-                    await cursor.execute(
-                        f"SELECT * FROM admin_table WHERE admin_login = %s ", (login))  # Замените на ваш запрос
+                    await cursor.execute("SELECT * FROM admin_table WHERE admin_login = %s", (login,))
                     result = await cursor.fetchall()
                     print(result)
                     return result
         except Exception as ex:
-            print(f"Error: ", ex)
+            print(f"Error: {ex}")
             return False
 
     async def getAllAdmins(self):
@@ -237,13 +238,13 @@ class DaBa:
             print(f"Error: ", ex)
             return False
 
-    async def authAdmin(self, admin: models.Admin.Admin):
+    async def getAdminFromDB(self, adminLogin, adminPassword):
         try:
             async with self.con.connection() as conn:
                 async with conn.cursor() as cur:
                     await cur.execute(
                         "SELECT * FROM admin_table WHERE admin_login = %s AND admin_password = %s",
-                        (admin.adminLogin, admin.adminPassword)
+                        (adminLogin, adminPassword)
                     )
                     result = await cur.fetchone()
                     if result:
@@ -252,7 +253,7 @@ class DaBa:
                     else:
                         return None
         except Exception as ex:
-            print(f"Error: ", ex)
+            print(f"Error: {ex}")
             return None
 
     async def saveAdminInDB(self, admin: models.Admin.Admin):
@@ -424,7 +425,12 @@ class UserManager:
 
 # Асинхронный метод для получения подключения
 async def get_conn():
-    return await asyncConnectionPool.getconn()
+    conn = await asyncConnectionPool.getconn()
+    return conn
+
+
+async def release_conn(conn):
+    await asyncConnectionPool.putconn(conn)
 
 
 async def adCreate():
