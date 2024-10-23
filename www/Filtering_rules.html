@@ -31,31 +31,35 @@
       </div>
     </div>
 
-    <div id="stat"></div>
+     <div id="stat"></div>
     <div id="rulesforinfo">
-      <div id="message-sens">
-        <div id="radios">
-      <p>Select a filter type</p>
-      <label>
-        <input type="radio" name="mask" value="option1" />
-        Mask
-      </label>
-      <label>
-        <input type="radio" name="delete" value="option2" />
-        Delete
-      </label>
-      <label>
-        <input type="radio" name="filter" value="option3" />
-        Filter
-      </label>
+      <form id="filterForm" method="post" onsubmit="submitFilter()">
+        <div id="message-sens">
+          <div id="radios">
+            <p>Select a filter type</p>
+            <label>
+              <input type="radio" name="type" value="mask" />
+              Mask
+            </label>
+            <label>
+              <input type="radio" name="type" value="delete" />
+              Delete
+            </label>
+            <label>
+              <input type="radio" name="type" value="filter" />
+              Filter
+            </label>
           </div>
-        <button id="confirm" onclick="submitFilter()">Confirm</button>
+          <button id="confirm" type="submit">Confirm</button>
+        </div>
+      </form>
     </div>
-      </div>
 
     <div id="table">
       <p id="massage-sens">List of regular expressions</p>
       <table>
         <tr id="welcome-string">
           <td style="width: 240px">Numer</td>
-          <td style="width: 240px; text-ali
+          <td style="width: 240px; text-ali" >
+          </td>
+        </tr></table></div></body></html>

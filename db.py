@@ -199,6 +199,31 @@ class DaBa:
             print(f"Error: ", ex)
             return
 
+    async def getUser(self, login, password):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute(
+                        f"SELECT * FROM admin_table WHERE admin_login={login} and admin_password={password}")  # Замените на ваш запрос
+                    result = await cursor.fetchall()
+                    return result
+        except Exception as ex:
+            print(f"Error: ", ex)
+            return False
+
+    async def getUserID(self, login):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute(
+                        f"SELECT * FROM admin_table WHERE admin_login={login}")  # Замените на ваш запрос
+                    result = await cursor.fetchall()
+                    print(result)
+                    return result
+        except Exception as ex:
+            print(f"Error: ", ex)
+            return False
+
     async def getAllAdmins(self):
         try:
             async with await get_conn() as conn:
@@ -209,8 +234,7 @@ class DaBa:
                     return result
         except Exception as ex:
             print(f"Error: ", ex)
-
-            return
+            return False
 
     async def authAdmin(self, admin: models.Admin.Admin):
         try:
