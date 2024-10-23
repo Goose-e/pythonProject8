@@ -118,7 +118,7 @@ class Masking():
             text = address_pattern.sub("***", text)
             text = reg_num_pattern.sub("***", text)
             text = diploma_pattern.sub("***", text)
-            return text, (text1 == text), text1
+
 
             def maskRemainingDigits(text):
                 text = re.sub(r'\b\d{4,}\b', '***', text)

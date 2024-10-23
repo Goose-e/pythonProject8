@@ -28,6 +28,7 @@ async def index():
     await db.initialize_pool()
     if request.method == "POST":
         check = await reverseServer1.getAllAdmins(request.form["email"],request.form["password"])
+        print(check)
         if check != None:
             LM = UserLogin().createUser(check)
             login_user(LM)

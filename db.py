@@ -204,7 +204,7 @@ class DaBa:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
                     await cursor.execute(
-                        f"SELECT * FROM admin_table WHERE admin_login={login} and admin_password={password}")  # Замените на ваш запрос
+                        f"SELECT * FROM admin_table WHERE admin_login = %s and admin_password = %s",(login, password))  # Замените на ваш запрос
                     result = await cursor.fetchall()
                     return result
         except Exception as ex:
@@ -216,7 +216,7 @@ class DaBa:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
                     await cursor.execute(
-                        f"SELECT * FROM admin_table WHERE admin_login={login}")  # Замените на ваш запрос
+                        f"SELECT * FROM admin_table WHERE admin_login = %s ", (login))  # Замените на ваш запрос
                     result = await cursor.fetchall()
                     print(result)
                     return result
