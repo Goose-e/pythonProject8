@@ -313,19 +313,23 @@ class DaBa:
 
     async def getAllRegulars(self):
         try:
-            async with await get_conn() as conn:
+            # Получение нового соединения из пула
+            async with self.con.connection() as conn:
+
                 async with conn.cursor() as cursor:
-                    await cursor.execute(
-                        "SELECT * FROM public.regular ORDER BY regular_id"
-                    )
-                rows = await cursor.fetchall()
-                result = [Regular(regular_id=row['regular_id'],
-                                  regular_expression=row['regular_expression'],
-                                  expression_status=row['expression_status']) for row in rows]
-                return result
+                    await cursor.execute("SELECT * FROM regular ORDER BY regular_id")
+                    rows = await cursor.fetchall()
+
+                    # Преобразование строк результата в объекты
+                    result = [Regular(regular_id=row[0],  # Убедитесь, что индексы правильные
+                                      regular_expression=row[1],
+                                      expression_status=row[2])
+                              for row in rows]
+
+                    return result
         except Exception as ex:
-            print(f"Error: ", ex)
-        return
+            print(f"Error: {ex}")
+            return None
 
     async def changeRegularStatus(self, regular_expression_id, expression_status):
         try:
@@ -426,17 +430,15 @@ async def get_conn():
 async def adCreate():
     await initialize_pool()
     db = DaBa()
-    await db.create_admin_table()
-    await db.add_admin('admin', 'admin')
-    await db.create_regular_expressions_table()
-    await db.create_source_reader_table()
-    await db.create_full_user_table()
-    await db.add_admin('gol', '123')
-    await db.create_user_table()
-    await db.create_regular_expressions_table()
-    await db.saveInfoInRegular(r"""(?<!\w)(\+?\d{1,3}[-\s]?)?\(?\d{3}\)?[-\s]?\d{1,3}[-\s]?\d{1,2}[-\s]?\d{2,3}(?!\w)""")
-    all = await db.getAllRegulars()
-    print(all)
+    # await db.create_admin_table()
+    # await db.add_admin('admin', 'admin')
+    # await db.create_regular_expressions_table()
+    # await db.create_source_reader_table()
+    # await db.create_full_user_table()
+    # await db.add_admin('gol', '123')
+    # await db.create_user_table()
+    # await db.create_regular_expressions_table()
+
 
 async def test_db_connection():
     try:
@@ -455,14 +457,18 @@ async def main():
     await test_db_connection()  # Тест подключения к базе данных
     data = DaBa()
     print(type(data.con))
+    str = 'r"""(?<!\w)(\+?\d{1,3}[-\s]?)?\(?\d{3}\)?[-\s]?\d{1,3}[-\s]?\d{1,2}[-\s]?\d{2,3}(?!\w)"""'
+    await data.saveInfoInRegular(str)
+    all = await data.getAllRegulars()
+    print(all)
 
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    # asyncio.run(main())  # Запустите основную асинхронную функцию
+    asyncio.run(main())  # Запустите основную асинхронную функцию
     #
-    manager = UserManager()
-    manager.create_database(f'{dbConst}')
-    manager.create_user(f'{user}', f'{password}')
-    manager.grant_privileges(f'{user}', f'{dbConst}')
-    asyncio.run(adCreate())
+    # manager = UserManager()
+    # manager.create_database(f'{dbConst}')
+    # manager.create_user(f'{user}', f'{password}')
+    # manager.grant_privileges(f'{user}', f'{dbConst}')
+    # asyncio.run(adCreate())
