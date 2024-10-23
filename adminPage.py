@@ -30,7 +30,7 @@ async def index():
         check:Admin = await reverseServer1.authAdmin(request.form["email"],request.form["password"])
         print(check)
         if check.get_id() is not None:
-            LM = UserLogin().createUser(check)
+            LM = await UserLogin().createUser(check)
             print(type(LM))
             login_user(LM)
             return redirect("Main_menu.html")

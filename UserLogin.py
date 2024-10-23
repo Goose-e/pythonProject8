@@ -1,12 +1,12 @@
 class UserLogin:
-    def fromBD(self, userID, DB):
-        self.__user = DB.getUserByID(userID)
+    async def fromBD(self, userID, DB):
+        self.__user = await DB.getUserByID(userID)
         return self
 
     def get_user(self):
         return self.__user
 
-    def createUser(self, user):
+    async def createUser(self, user):
         self.__user = user
         return self
 
