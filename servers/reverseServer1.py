@@ -1,8 +1,6 @@
 import asyncio
 import base64
 from asyncio import WindowsSelectorEventLoopPolicy
-from contextlib import asynccontextmanager
-
 import rsa
 from fastapi import FastAPI, Request
 from Cryptodome.Cipher import AES
@@ -14,13 +12,18 @@ import consts
 import db
 from consts import portS1, portC1
 from maskMethods import Masking
-from db import DaBa, initialize_pool
+from db import DaBa
+from models.FullUser import FullUser
+from models.UserInfo import UserInfo
 
 servApp = FastAPI()
+dataBase: DaBa
 
 
 async def lifespan(scope, receive, send):
     if scope['type'] == 'lifespan':
+        global dataBase
+        dataBase = DaBa()
         await db.initialize_pool()
         await send({"type": "lifespan.startup.complete"})  # Сообщаем о завершении старта
         try:
@@ -51,19 +54,24 @@ async def getAllAdmins():
 @servApp.get("/getPublicKeyServer")
 async def get_public_key():
     try:
-
         publicKeyUnmade = publicKey.save_pkcs1(format='PEM')  # Преобразуем публичный ключ в формат PEM
         return {"public_key": publicKeyUnmade.decode('utf-8')}  # Возвращаем строковое представление ключа
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
 
-async def saveInfoInDB(userId, userData, flag):
+async def saveInfoInDB(data, Message, flag):
     try:
-        print(userId, userData, flag)
+        print(data, Message, flag)
         if not flag:
-            result = 1
-            #await dataBase.saveInfoInDB(userId, userData)
+            userInfo = UserInfo(
+                userInfoId= 0,
+                userId=data['UserID'],
+                secretInfo=Message,
+                endpoint=data['Endpoint'],
+                timestamp=data['Timestamp']
+            )
+            result = await dataBase.saveInfoInDB(userInfo)
             print(result)
         else:
             print("не чд")
@@ -83,9 +91,24 @@ async def decode(request: Request):
         if isinstance(userData, bytes):
             userData = userData.decode('utf-8')
             userData = json.loads(userData)
-
         print(f"Расшифрованные данные: {userData}")
-
+        user = await dataBase.findUserByUserId(userData['UserID'])
+        #↓☠️☠️
+        if user is None:
+            user = FullUser(
+                user_id=userData['UserID'],
+                email=userData['Email'],
+                login=userData['Login'],
+                support_level=userData['SupportLevel'],
+                age=userData.get('Возраст'),
+                birthdate=userData.get('Дата рождения'),
+                first_name=userData.get('Имя'),
+                second_name=userData.get('Фамилия'),
+                last_name=userData.get('Отчество'),
+                gender=userData.get('Пол'),
+                phone_number=userData.get('Номер телефона')
+            )
+            await dataBase.saveFullUser(user)
         async with httpx.AsyncClient() as client:
             response = await client.post(f"http://127.0.0.1:{portS1}/proxy/", json=userData)
             print(f"Ответ от proxy: {response.status_code}, {response.text}")
@@ -108,7 +131,7 @@ async def proxy(request: Request):
         return "ok"
     except:
         data['Message'], flag, text = Masking().maskData(data['Message'], int(maskType))
-    await saveInfoInDB(data['UserID'], text, flag)
+    await saveInfoInDB(data, text, flag)
     print(data)
     async with httpx.AsyncClient(verify=consts.cert_path) as client:
         response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=json.dumps(data['Message']))

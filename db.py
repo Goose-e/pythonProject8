@@ -6,11 +6,13 @@ from psycopg_pool import AsyncConnectionPool
 import models.Admin
 from consts import *
 from models.Admin import Admin
+from models.FullUser import FullUser
 from models.Regular import Regular
 from models.UserInfo import UserInfo
 
 superUserPassword = "Kolos213"
 asyncConnectionPool = None
+
 
 async def close_pool():
     global asyncConnectionPool
@@ -22,7 +24,7 @@ async def initialize_pool():
         asyncConnectionPool = AsyncConnectionPool(
             f"dbname=hackaton user=hackaton_admin password='admin' host='localhost'",
             min_size=1,
-            max_size=10,
+            max_size=1000,
         )
         print(type(asyncConnectionPool))  # Должно быть <class '...'>
         await asyncConnectionPool.open()
@@ -70,7 +72,7 @@ class DaBa:
                           "user_id" int PRIMARY KEY,
                           "email" VARCHAR,
                           "login" VARCHAR,
-                          "support_level" INT ,
+                          "support_level" varchar ,
                           "age" INT,
                           "birthdate" DATE,
                           "first_name" VARCHAR,
@@ -91,8 +93,8 @@ class DaBa:
                     user_info_id serial PRIMARY KEY,
                     FOREIGN KEY  user_id  REFERENCES full_user ON DELETE CASCADE,
                     secret_info VARCHAR,
-                    "endpoint" VARCHAR ,
-                    "timestamp" TIMESTAMP
+                    endpoint_place VARCHAR ,
+                    message_time TIMESTAMP
                 );""")
                 await cur.execute("ALTER TABLE user_info OWNER TO hackaton_admin;")
                 await cur.execute("""
@@ -124,25 +126,71 @@ class DaBa:
             print(f"Error: ", ex)
             return
 
-    async def findUserById(self, id):
+    async def findUserInfoByUserId(self, id):
         try:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
                     await cursor.execute(
-                        f"SELECT user_id, secret_info FROM user_info WHERE user_id ={id}")
+                        f"SELECT user_id, secret_info,endpoint_place,message_time FROM user_info WHERE user_id ={id}")
                     result = await cursor.fetchall()
                     return result
         except Exception as ex:
             print(f"Error: ", ex)
             return
 
-    async def saveInfoInDB(self, userId, secretInfo):
+    async def findUserByUserId(self, id):
         try:
             async with await get_conn() as conn:
                 async with conn.cursor() as cursor:
                     await cursor.execute(
-                        "INSERT INTO public.user_info (user_id, secret_info) VALUES (%s, %s)",
-                        (userId, secretInfo)
+                        f"SELECT * FROM full_user WHERE user_id ={id}")
+                    result = await cursor.fetchone()
+                    if result:
+                        user = FullUser(
+                            user_id=result[0],
+                            email=result[1],
+                            login=result[2],
+                            support_level=result[3],
+                            age=result[4],
+                            birthdate=result[5],
+                            first_name=result[6],
+                            phone_number=result[7],
+                            second_name=result[8],
+                            gender=result[9],
+                            last_name=result[10],
+                        )
+                        return user
+                    else:
+                        return None
+        except Exception as ex:
+            print(f"Error: ", ex)
+            return
+
+    async def saveFullUser(self, user: FullUser):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute(
+                        "INSERT INTO full_user ( user_id, email, login, support_level, age, birthdate,first_name, phone_number, second_name, gender, last_name)  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                        (
+                            user.user_id, user.email, user.login, user.support_level, user.age,
+                            user.birthdate, user.first_name, user.phone_number, user.second_name,
+                            user.gender, user.last_name
+                        )
+                    )
+                    result = "Данные сохранены"
+                    return result
+        except Exception as ex:
+            print(f"Error: ", ex)
+            return
+
+    async def saveInfoInDB(self, userInfo):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute(
+                        "INSERT INTO public.user_info (user_id, secret_info,endpoint_place,message_time) VALUES (%s, %s, %s, TO_TIMESTAMP(%s))",
+                        (userInfo.userId, userInfo.secretInfo, userInfo.endpoint, userInfo.timestamp)
                     )
                     result = "Данные сохранены"
                     return result
@@ -368,8 +416,11 @@ async def test_db_connection():
             print("Connected to the database successfully.")
     except Exception as e:
         print(f"Failed to connect to the database: {e}")
+
+
 def DaBa1():
     return DaBa()
+
 
 async def main():
     await initialize_pool()  # Инициализируйте пул соединений

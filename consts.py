@@ -10,12 +10,12 @@ password = "admin"
 dbConst = "hackaton"
 servers = [
     f'http://127.0.0.1:{portS1}',
-    # f'http://127.0.0.1:{portS2}',
-    # f'http://127.0.0.1:{portS3}'
+    f'http://127.0.0.1:{portS2}',
+    f'http://127.0.0.1:{portS3}'
 ]
 routers = [
     f"http://127.0.0.1:{portR1}",
-    # f"http://127.0.0.1:{portR2}"
+    f"http://127.0.0.1:{portR2}"
 ]
 import os
 
