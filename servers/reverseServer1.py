@@ -41,11 +41,11 @@ servApp.router.lifespan = lifespan
 (publicKey, privateKey) = rsa.newkeys(2048)
 
 
-async def getAllAdmins():
+async def getAllAdmins(email, password):
     try:
         dataBase = db.DaBa1()
         print(type(dataBase.con))
-        result = await dataBase.getAllAdmins()
+        result = await dataBase.getUser(email,password)
         return result
     except Exception as ex:
         print(f"Ошибка при получения информации: {ex}")

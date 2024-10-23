@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, redirect, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import db
 from db import DaBa
+from UserLogin import UserLogin
 import asyncio
 from adminPanelMethods import adminControl
 from servers import reverseServer1, reverseServer2, reverseServer3
@@ -15,27 +16,35 @@ app.config["SECRET_KEY"] = "iojoijoijoijjijjkjlbhyuglftdfyugf7y"
 login_manager=LoginManager(app)
 
 
+@login_manager.user_loader
+def load_user(user_id):
+    return UserLogin().fromBD(user_id, DaBa())
+
+
 @app.route("/")
 @app.route("/Registration_user.html")
 @app.route("/Registration_user.html", methods=["POST"])
 async def index():
     await db.initialize_pool()
     if request.method == "POST":
-        if request.form["email"] == "123" and request.form["password"] == "123":
-            Admins = await reverseServer1.getAllAdmins()
-            # print(Admins)
+        check = await reverseServer1.getAllAdmins(request.form["email"],request.form["password"])
+        if check != None:
+            LM = UserLogin().createUser(check)
+            login_user(LM)
             return redirect("Main_menu.html")
+        else: return render_template("Registration_user.html")
     return render_template("Registration_user.html")
 
 
 @app.route("/Main_menu.html")
-# @app.route("/Main_menu.html", methods=["POST"])
+@login_required
 def menu():
     return render_template("Main_menu.html")
 
 
 @app.route("/Filtering_rules.html")
 @app.route("/Filtering_rules.html", methods=["POST"])
+@login_required
 async def filter():
     if request.method == "POST":
         if request.form["type"] == "mask":
@@ -49,6 +58,7 @@ async def filter():
 
 
 @app.route("/data_sorce.html")
+@login_required
 def source():
     return render_template("data_sorce.html")
 
