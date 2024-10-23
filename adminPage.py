@@ -25,7 +25,7 @@ async def index():
         check = await reverseServer1.authAdmin(email, password)
         if check and check.get_id() is not None:
             user = createUser(check)  # Создание экземпляра UserLogin
-            login_user(AuthUser(2))  # Аутентификация пользователя
+            login_user(user)  # Аутентификация пользователя
             return redirect("/Main_menu.html")
         else:
             return await render_template("Registration_user.html", error="Неверный логин или пароль")
