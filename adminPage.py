@@ -32,7 +32,6 @@ async def index():
         if check[0] != None:
             LM = UserLogin().createUser(check)
             login_user(LM)
-            print("ff")
             return redirect("Main_menu.html")
         else: return render_template("Registration_user.html")
     return render_template("Registration_user.html")
