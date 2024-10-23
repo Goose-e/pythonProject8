@@ -433,7 +433,10 @@ async def adCreate():
     await db.create_full_user_table()
     await db.add_admin('gol', '123')
     await db.create_user_table()
-
+    await db.create_regular_expressions_table()
+    await db.saveInfoInRegular(r"""(?<!\w)(\+?\d{1,3}[-\s]?)?\(?\d{3}\)?[-\s]?\d{1,3}[-\s]?\d{1,2}[-\s]?\d{2,3}(?!\w)""")
+    all = await db.getAllRegulars()
+    print(all)
 
 async def test_db_connection():
     try:

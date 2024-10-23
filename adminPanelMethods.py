@@ -2,7 +2,7 @@ from servers import reverseServer1
 from db import DaBa
 import asyncio
 import httpx
-from consts import portS1, portC1
+from consts import portS1, portS2, portS3, portC1
 
 
 class adminControl():
@@ -11,6 +11,10 @@ class adminControl():
         async with httpx.AsyncClient() as client:
             data = {"Message": ''}
             response = await client.post(f"http://127.0.0.1:{portS1}/proxy/", json=(data, maskMethodType))
+            print(f"Ответ от proxy: {response.status_code}, {response.text}")
+            response = await client.post(f"http://127.0.0.1:{portS2}/proxy/", json=(data, maskMethodType))
+            print(f"Ответ от proxy: {response.status_code}, {response.text}")
+            response = await client.post(f"http://127.0.0.1:{portS3}/proxy/", json=(data, maskMethodType))
             print(f"Ответ от proxy: {response.status_code}, {response.text}")
 
 
