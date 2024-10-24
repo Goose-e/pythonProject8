@@ -1,41 +1,30 @@
-import asyncio
-from flask_login import UserMixin
+from quart_auth import AuthUser
+
+from servers.reverseServer1 import authAdmin
 
 
-async def fromBD(userID: int, DB):
-    """Асинхронное получение пользователя из базы данных"""
-    __user = await DB.getUserByID(userID)
-    return __user
+def createUser(user) -> 'UserLogin':
+    return UserLogin(id = user.adminId, login =user.adminLogin, password =user.adminPassword)
 
-class UserLogin(UserMixin):
-    def __init__(self):
-        self.__user = None
+class UserLogin(AuthUser):
+    def __init__(self, id, login, password):  # Добавляем параметр auth_id
+        super().__init__(2)  # Вызов конструктора родительского класса
+        self.userId = id
+        self.userLogin = login
+        self.userPassword = password
+
 
     def get_user(self):
-        """Возвращает текущего пользователя"""
-        return self.__user
-
-    async def createUser(self, user) -> 'UserLogin':
-        """Создание нового пользователя"""
-        self.__user = user
         return self
 
-
-
-    async def is_authenticated(self) -> bool:
-        """Проверка, аутентифицирован ли пользователь"""
-        return self.__user is not None
+    def is_authenticated(self):
+        return self.is_active()
 
     def is_active(self) -> bool:
-        """Проверка, активен ли пользователь"""
         return True
 
     def is_anonymous(self) -> bool:
-        """Проверка, является ли пользователь анонимным"""
-        return self.__user is None
+        return False
 
     def get_id(self) -> str:
-        """Получение идентификатора пользователя"""
-        if self.__user is not None:
-            return str(self.__user.adminId)
-        return None
+        return str(self.userId) if self.userId is not None else str(None)

@@ -9,6 +9,7 @@ from Cryptodome.Cipher import AES
 import httpx
 import json
 import uvicorn
+
 import consts
 import db
 from consts import portS3, portC1
@@ -23,13 +24,13 @@ dataBase: DaBa
 
 
 class MyServer(IServer):
+
     async def getRegulars(self):
         regulars = await getRegulars(self)
         return regulars
 
-    async def authAdmin(self, email, password):
-        admin = await authAdmin(email, password)
-        return admin
+
+serverInstance = MyServer()
 
 
 async def getRegulars(self):
@@ -42,7 +43,16 @@ async def getRegulars(self):
         print(f"Ошибка при получения информации: {ex}")
 
 
-myServer = MyServer()
+async def authAdmin(email, password):
+    try:
+        dataBase = db.DaBa1()
+        print(type(dataBase.con))
+        result = await dataBase.getAdminFromDB(email, password)
+        return result
+    except Exception as ex:
+        print(f"Ошибка при получении информации: {ex}")
+        return None
+
 
 
 async def lifespan(scope, receive, send):
@@ -64,16 +74,6 @@ async def lifespan(scope, receive, send):
 servApp.router.lifespan = lifespan
 
 (publicKey, privateKey) = rsa.newkeys(2048)
-
-
-async def authAdmin(email, password):
-    try:
-        dataBase = db.DaBa1()
-        print(type(dataBase.con))
-        result = await dataBase.getAdminFromDB(email, password)
-        return result
-    except Exception as ex:
-        print(f"Ошибка при получения информации: {ex}")
 
 
 @servApp.get("/getPublicKeyServer")
@@ -160,12 +160,13 @@ async def proxy(request: Request):
         await MaskControl.changeMaskType(cheat)
         return "ok"
     except:
-        data['Message'], flag, text = await Masking().maskData(data['Message'], int(maskType), myServer)
+        data['Message'], flag, text = await Masking().maskData(data['Message'], int(maskType), serverInstance)
     await saveInfoInDB(data, text, flag)
     print(data)
-    async with httpx.AsyncClient(verify=consts.cert_path) as client:
-        response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=json.dumps(data['Message']))
-    print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
+    if flag is not False:
+        async with httpx.AsyncClient(verify=consts.cert_path) as client:
+            response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=json.dumps(data['Message']))
+            print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
     return "ok"
 
 

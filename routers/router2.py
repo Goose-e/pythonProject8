@@ -34,12 +34,14 @@ async def get_next_server():
     return server
 
 
-@router2.post("/send")
+@router1.post("/send")
 async def balance_request(request: Request):
+    global current_server
     data = await request.json()
     REQUEST_COUNT.inc()
     start_time = time.time()
-    next_server =  await get_next_server()
+    next_server = servers[current_server]
+    current_server = (current_server + 1) % len(servers)
     url = f"{next_server}/getData"
     try:
         with latency_summary.labels(endpoint='/getData').time():
@@ -64,19 +66,19 @@ async def getPublicKey():
         return response.json()
 
 
-@router2.post("/sendData")
-async def sendData(request: Request):
-    data = await request.json()
-    print(type(data))
-
-
-    async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.post(url, json=data)
-
-        if response.status_code == 200:
-            print("Ok")
-        else:
-            print(f"Ошибка отправки данных: {response.status_code}")
+# @router2.post("/sendData")
+# async def sendData(request: Request):
+#     data = await request.json()
+#     print(type(data))
+#
+#
+#     async with httpx.AsyncClient(timeout=10) as client:
+#         response = await client.post(url, json=data)
+#
+#         if response.status_code == 200:
+#             print("Ok")
+#         else:
+#             print(f"Ошибка отправки данных: {response.status_code}")
 
 
 if __name__ == '__main__':

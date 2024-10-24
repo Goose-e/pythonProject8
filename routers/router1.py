@@ -35,10 +35,12 @@ async def get_next_server():
 
 @router1.post("/send")
 async def balance_request(request: Request):
+    global current_server
     data = await request.json()
     REQUEST_COUNT.inc()
     start_time = time.time()
-    next_server = await get_next_server()
+    next_server = servers[current_server]
+    current_server = (current_server + 1) % len(servers)
     url = f"{next_server}/getData"
     try:
         with latency_summary.labels(endpoint='/getData').time():
@@ -63,31 +65,31 @@ async def getPublicKey():
         return response.json()
 
 
-@router1.post("/sendData")
-async def sendData(request: Request):
-    data = await request.json()
-    print(f"Полученные данные: {data}")  # Логируем полученные данные
-    next_server = get_next_server()
-    url = f"{next_server}/getData"
-    print(f"Отправка данных на: {url}")  # Логируем URL
-
-    async with httpx.AsyncClient(timeout=10) as client:
-        try:
-            response = await client.post(url, json=data)  # Здесь важно, чтобы data был словарем
-            print(f"Ответ от {url}: {response.status_code}, {response.text}")  # Логируем ответ
-
-            if response.status_code == 200:
-                print("Ok")
-                return {"status": "success", "data": response.json()}
-            else:
-                print(f"Ошибка отправки данных: {response.status_code}, Ответ: {response.text}")
-                raise HTTPException(status_code=response.status_code, detail=response.text)
-        except httpx.RequestError as e:
-            print(f"Ошибка при отправке запроса: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
-        except Exception as e:
-            print(f"Неожиданная ошибка: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+# @router1.post("/sendData")
+# async def sendData(request: Request):
+#     data = await request.json()
+#     print(f"Полученные данные: {data}")  # Логируем полученные данные
+#     next_server = get_next_server()
+#     url = f"{next_server}/getData"
+#     print(f"Отправка данных на: {url}")  # Логируем URL
+#
+#     async with httpx.AsyncClient(timeout=10) as client:
+#         try:
+#             response = await client.post(url, json=data)  # Здесь важно, чтобы data был словарем
+#             print(f"Ответ от {url}: {response.status_code}, {response.text}")  # Логируем ответ
+#
+#             if response.status_code == 200:
+#                 print("Ok")
+#                 return {"status": "success", "data": response.json()}
+#             else:
+#                 print(f"Ошибка отправки данных: {response.status_code}, Ответ: {response.text}")
+#                 raise HTTPException(status_code=response.status_code, detail=response.text)
+#         except httpx.RequestError as e:
+#             print(f"Ошибка при отправке запроса: {e}")
+#             raise HTTPException(status_code=500, detail=str(e))
+#         except Exception as e:
+#             print(f"Неожиданная ошибка: {e}")
+#             raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == '__main__':

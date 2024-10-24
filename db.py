@@ -16,15 +16,15 @@ asyncConnectionPool = None
 
 async def close_pool():
     global asyncConnectionPool
-    if asyncConnectionPool:
-        await asyncConnectionPool.close()
+    # if asyncConnectionPool:
+    #     # await asyncConnectionPool.close()
 
 
 async def initialize_pool():
     global asyncConnectionPool
     try:
         asyncConnectionPool = AsyncConnectionPool(
-            f"dbname=hackaton user=hackaton_admin password='admin' host='localhost'",
+            f"dbname=hackaton user=hackaton_admin password='admin' host='127.0.0.1'",
             min_size=1,
             max_size=1000,
         )
@@ -463,23 +463,29 @@ async def main():
     await test_db_connection()  # Тест подключения к базе данных
     data = DaBa()
     print(type(data.con))
-    str = r'r"""(?<!\w)(\+?\d{1,3}[-\s]?)?\(?\d{3}\)?[-\s]?\d{1,3}[-\s]?\d{1,2}[-\s]?\d{2,3}(?!\w)"""'
+    str = r'r"""(?<!\w)(\+?\d{1,3}[-\s]?)?\(?\d{2,4}\)?[-\s]?\d{1,3}[-\s]?\d{1,2}[-\s]?\d{2,3}(?!\w)"""'
     await data.saveInfoInRegular(str)
-    str = r'r"""\b\d{4}[-\s]?\d{6}\b|\b[А-Я]{2}\d{7}\b"""'
+    str = r'r"""\b\d{4}[-\s]?\d{6}\b|\b[A-Z]{2}\d{7}\b"""'
     await data.saveInfoInRegular(str)
     str = r'r"""(?<!\w)(?:\d{4}[-\s]?){3}\d{4}\b|\d{16}\b"""'
     await data.saveInfoInRegular(str)
+    # номер счёта
     str = r'r"""(?<!\w)(?:\d{4}[-\s]?){4}\d{4}\b"""'
+    # даты рождения
     await data.saveInfoInRegular(str)
     str = r'r"""(\b\d{2}[-./]\d{2}[-./]\d{4}\b)|(\b\d{4}[-./]\d{2}[-./]\d{2}\b)|(\b\d{2}\s\w{3,}\s\d{4}\b)"""'
     await data.saveInfoInRegular(str)
-    str = r'r"""(?<!\w)(Россия|г\.\s?[А-Яа-яЁё]+|г[-]?\s?[А-Яа-яЁё]+|ул\.\s?[А-Яа-яЁё]+|пер\.\s?[А-Яа-яЁё]+|д\.\s?\d+|кв\.\s?\d+|дом\s?\d+)"""'
+    str = r'r"""(?<!\w)(\b[A-ZА-ЯЁ][a-zа-яё]+\s[A-ZА-ЯЁ][a-zа-яё]+\b)|(\b[A-ZА-ЯЁ]\.\s[A-ZА-ЯЁ][a-zа-яё]+\b)|(\b[A-ZА-ЯЁ]\.\s[A-ZА-ЯЁ]\.\s[A-ZА-ЯЁ][a-zа-яё]+\b)"""'
+    # Адреса
+    await data.saveInfoInRegular(str)
+    str = r'r"""(?<!\w)(Россия|Беларусь+|г\.\s?[А-Яа-яЁё]+|г\.[-]?\s?[А-Яа-яЁё]+|город\s?[А-Яа-яЁё]+|ул\.\s?[А-Яа-яЁё]+|улица\s?[А-Яа-яЁё]+|пер\.\s?[А-Яа-яЁё]+|[А-Яа-яЁё]+[-\s]?пер\.|переулок\s?[А-Яа-яЁё]+|д\.-?\s?\d+|дом\s?\d+|кв\.-?\s?\d+|квартира\s?\d+)"""'
     await data.saveInfoInRegular(str)
     str = r'r"""(?<!\w)\d{2}[-\s]?\d{3}[-\s]?\d{3}(?!\w)"""'
     await data.saveInfoInRegular(str)
     str = r'r"""(?<!\w)ДК[-\s]?\d{8}\b|[А-Я]{2}[-\s]?\d{8}\b"""'
     await data.saveInfoInRegular(str)
     all = await data.getAllRegulars()
+
     print(all)
 
 
