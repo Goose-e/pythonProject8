@@ -51,7 +51,4 @@ class Masking():
                 return text
             text1 = text
             text = maskRemainingDigits(text)
-            if text1 != text:
-                return False
-            else:
-                return text, (text1 == text), text1
+            return text, (text1 == text), text1
