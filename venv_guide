@@ -3,7 +3,6 @@ source venv/bin/activate  # Linux/MacOS
 venv\Scripts\activate  # Windows
 
 pip install -r requirements.txt  # Установка зависимостей
-
 Когда вы установили новый пакет или удалили старый, вам нужно запустить команду:
 pip freeze > requirements.txt
 
