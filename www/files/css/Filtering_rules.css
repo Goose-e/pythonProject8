@@ -55,3 +55,21 @@
   padding-left: 10px;
   text-decoration: none;
 }
+
+#list-values {
+  margin: 0 auto;
+  color: #060606;
+  border-radius: 10px;
+  margin: 0 auto;
+  height: 220px;
+  width: 1150px;
+  overflow-y: auto;
+}
+
+table{
+    text-align: center;
+}
+#welcome-string {
+  background-color: #9f9f9f;
+  font-weight: 700;
+}

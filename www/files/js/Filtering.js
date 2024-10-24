@@ -3,7 +3,17 @@ function create_str() {
   var tr = document.createElement("tr");
   tr.setAttribute("class", "stoka_2");
   table.appendChild(tr);
-  for (var i = 0; i < 5; i++) {
+
+  var button = document.createElement("button");
+  button.setAttribute("type", "button");
+  button.setAttribute("class", "button-filter");
+  button.innerHTML = "Del";
+
+  var chekbox = document.createElement("input");
+  chekbox.setAttribute("type", "checkbox");
+  chekbox.setAttribute("class", "check-filter");
+
+  for (var i = 0; i < 4; i++) {
     var td = document.createElement("td");
     switch (i) {
       case 0:
@@ -16,10 +26,8 @@ function create_str() {
         td.innerText = getJsonField(i);
         break;
       case 3:
-        td.innerText = getJsonField(i);
-        break;
-      case 4:
-        td.innerText = getJsonField(i);
+        td.appendChild(chekbox);
+        td.appendChild(button);
         break;
     }
     tr.appendChild(td);
