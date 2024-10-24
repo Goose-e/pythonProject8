@@ -65,7 +65,6 @@ class DaBa:
                 await conn.commit()
 
     async def create_full_user_table(self):
-
         async with self.con.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute('DROP TABLE IF EXISTS "full_user";')
@@ -363,20 +362,20 @@ class DaBa:
 
 
 # нужны апдейты статусов для сурс и регулярок
-async def saveInfoInSource(self, source):
-    try:
-        async with await get_conn() as conn:
-            async with conn.cursor() as cursor:
-                await cursor.execute(
-                    "INSERT INTO public.source (source_adress, source_status) VALUES (%s, %s)",
-                    (source, 1)
-                )
-                result = "Данные сохранены"
-                return result
+    async def saveInfoInSource(self, source):
+        try:
+            async with await get_conn() as conn:
+                async with conn.cursor() as cursor:
+                    await cursor.execute(
+                        "INSERT INTO public.source (source_adress, source_status) VALUES (%s, %s)",
+                        (source, 1)
+                    )
+                    result = "Данные сохранены"
+                    return result
 
-    except Exception as ex:
-        print(f"Error: ", ex)
-        return
+        except Exception as ex:
+            print(f"Error: ", ex)
+            return
 
 
 class UserManager:
@@ -436,14 +435,14 @@ async def release_conn(conn):
 async def adCreate():
     await initialize_pool()
     db = DaBa()
-    # await db.create_admin_table()
-    # await db.add_admin('admin', 'admin')
-    # await db.create_regular_expressions_table()
-    # await db.create_source_reader_table()
-    # await db.create_full_user_table()
-    # await db.add_admin('gol', '123')
-    # await db.create_user_table()
-    # await db.create_regular_expressions_table()
+    #await db.create_admin_table()
+    #await db.add_admin('admin', 'admin')
+    await db.create_regular_expressions_table()
+    await db.create_source_reader_table()
+    await db.create_full_user_table()
+    await db.add_admin('gol', '123')
+    await db.create_user_table()
+    await db.create_regular_expressions_table()
 
 
 async def test_db_connection():

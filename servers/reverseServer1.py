@@ -11,10 +11,10 @@ import json
 import uvicorn
 
 import consts
-import db
+from database import db
 from consts import portS1, portC1
 from maskMethods import Masking
-from db import DaBa
+from database.db import DaBa
 from models.FullUser import FullUser
 from models.UserInfo import UserInfo
 from servers.IServer import IServer
@@ -169,6 +169,13 @@ async def proxy(request: Request):
             print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
     return "ok"
 
+
+async def get_database():
+    global dataBase
+    if dataBase is None:
+        dataBase = db.DaBa1()
+        await db.initialize_pool()
+    return dataBase
 
 def decrypt_data(encrypted_data: dict, private_key: rsa.PrivateKey):
     try:

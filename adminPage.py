@@ -2,12 +2,12 @@ from asyncio import WindowsSelectorEventLoopPolicy
 from quart import Quart, render_template, request, redirect
 import asyncio
 from quart_auth import (
-    AuthUser, current_user, login_required, login_user, logout_user, QuartAuth
+    login_required, login_user, logout_user, QuartAuth
 )
-from UserLogin import UserLogin, createUser
+from UserLogin import createUser
 from adminPanelMethods import adminControl
 from servers import reverseServer1
-import db
+from database import db
 
 app = Quart(__name__, static_folder="www/files", template_folder="www")
 app.config["SECRET_KEY"] = "iojoijoijoijjijjkjlbhyuglftdfyugf7y"
