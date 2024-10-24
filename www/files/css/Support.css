@@ -1,0 +1,34 @@
+#icons_3 {
+  position: absolute;
+  top: 0px;
+  width: 38px;
+}
+.info {
+  position: absolute;
+  top: 95px;
+  left: 303px;
+  width: 1085px;
+  height: 205px;
+  background: #171a1fff; /* neutral-900 */
+  border-radius: 12px; /* border-xl */
+  border-width: 1px;
+  border-color: #f3f4f6ff; /* neutral-200 */
+  border-style: solid;
+}
+
+.text {
+
+    padding-left: 40px;
+    font-family: "Archivo"; /* Heading */
+    font-size: 32px;
+    line-height: 20px;
+    font-weight: 700;
+    color: #FFEE00FF; /* primary-500 */
+  }
+  .pos{
+    position: absolute;
+    top: 350px;
+    line-height: 60px;
+    left: 303px;
+    color: #FFEE00FF;
+  }
