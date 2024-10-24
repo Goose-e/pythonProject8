@@ -436,14 +436,14 @@ async def release_conn(conn):
 async def adCreate():
     await initialize_pool()
     db = DaBa()
-    # await db.create_admin_table()
-    # await db.add_admin('admin', 'admin')
-    # await db.create_regular_expressions_table()
-    # await db.create_source_reader_table()
-    # await db.create_full_user_table()
-    # await db.add_admin('gol', '123')
-    # await db.create_user_table()
-    # await db.create_regular_expressions_table()
+    await db.create_admin_table()
+    await db.add_admin('admin', 'admin')
+    await db.create_regular_expressions_table()
+    await db.create_source_reader_table()
+    await db.create_full_user_table()
+    await db.add_admin('gol', '123')
+    await db.create_user_table()
+    await db.create_regular_expressions_table()
 
 
 async def test_db_connection():
@@ -491,10 +491,10 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    asyncio.run(main())  # Запустите основную асинхронную функцию
-    #
-    # manager = UserManager()
-    # manager.create_database(f'{dbConst}')
-    # manager.create_user(f'{user}', f'{password}')
-    # manager.grant_privileges(f'{user}', f'{dbConst}')
-    # asyncio.run(adCreate())
+    # asyncio.run(main())  # Запустите основную асинхронную функцию
+
+    manager = UserManager()
+    manager.create_database(f'{dbConst}')
+    manager.create_user(f'{user}', f'{password}')
+    manager.grant_privileges(f'{user}', f'{dbConst}')
+    asyncio.run(adCreate())
