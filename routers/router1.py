@@ -9,10 +9,10 @@ import time
 from consts import portR1, servers, portS1
 
 REQUEST_COUNT = Counter('balance_request_count', 'Количество запросов, обработанных балансировщиком')
-REQUEST_LATENCY = Histogram('balance_request_latency_seconds', 'Задержка обработки запросов балансировщиком',
+REQUEST_LATENCY = Histogram('request_latency', 'Задержка обработки запросов балансировщиком',
                             ['endpoint'])
 REQUEST_ERROR_COUNT = Counter('balance_request_error_count', 'Количество ошибок, возникших при обработке запросов')
-latency_summary = Summary('request_latency_seconds', 'Latency of requests in seconds', ['endpoint'])
+latency_summary = Summary('latency', 'Latency of requests in seconds', ['endpoint'])
 
 router1 = FastAPI()
 
@@ -46,7 +46,8 @@ async def balance_request(request: Request):
         with latency_summary.labels(endpoint='/getData').time():
             async with httpx.AsyncClient() as client:
                 response = await client.post(f"{url}", json=data)
-                latency = time.time() - start_time
+                latency = round(time.time() - start_time, 2)
+                print(latency)
                 REQUEST_LATENCY.labels(endpoint='/getData').observe(latency)
                 return response.json()
     except Exception as e:
