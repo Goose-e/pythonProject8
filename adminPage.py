@@ -55,11 +55,15 @@ async def filter():
     return await render_template("Filtering_rules.html")
 
 
-@app.route("/data_source.html")
+@app.route("/data_sorce.html")
 @login_required
 async def source():
-    return await render_template("data_source.html")
+    return await render_template("data_sorce.html")
 
+@app.route("/UserSupport.html")
+@login_required
+async def userSupport():
+    return await render_template("UserSupport.html")
 
 @app.route("/logout")
 @login_required
@@ -67,6 +71,10 @@ async def logout():
     await logout_user()  # Выход пользователя
     return redirect("Registration_user.html")
 
+@app.route("/Cats.html")
+@login_required
+async def cat():
+    return await render_template("Cats.html")
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())

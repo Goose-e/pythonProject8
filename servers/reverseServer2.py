@@ -26,14 +26,14 @@ dataBase: DaBa
 class MyServer(IServer):
 
     async def getRegulars(self):
-        regulars = await getRegulars(self)
+        regulars = await getRegulars()
         return regulars
 
 
 serverInstance = MyServer()
 
 
-async def getRegulars(self):
+async def getRegulars():
     try:
         dataBase = db.DaBa1()
         print(type(dataBase.con))

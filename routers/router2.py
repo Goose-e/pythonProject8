@@ -44,7 +44,7 @@ async def balance_request(request: Request):
     url = f"{next_server}/getData"
     try:
         with latency_summary.labels(endpoint='/getData').time():
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.post(f"{url}", json=data)
                 latency = time.time() - start_time
                 REQUEST_LATENCY.labels(endpoint='/getData').observe(latency)
