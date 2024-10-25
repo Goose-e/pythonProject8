@@ -1,33 +1,43 @@
 function create_str(jsonData) {
     var table = document.querySelector("table");
-    // Iterate over the 'Message' array
+
+    // Проходим по массиву 'Message'
     jsonData.Message.forEach(item => {
         var tr = document.createElement("tr");
         tr.setAttribute("class", "stoka_2");
         table.appendChild(tr);
+        item.replace('E','o');
+        const regul =/'/g;
 
-        // Accessing properties from the item object
+        item = item.replace(regul,'\"');
+        console.log(item);
+
+        var json_file = JSON.parse(item)
+
+        // Предполагаем, что у каждого объекта 'item' есть ключи 'SupportLevel', 'Timestamp', 'Endpoint' и 'Message'
         var tdSupportLevel = document.createElement("td");
-        tdSupportLevel.innerText = item.Message;  // Adjust based on actual structure
+        tdSupportLevel.innerText = json_file.SupportLevel|| 'N/A';  // Подкорректируйте в зависимости от структуры данных
         tr.appendChild(tdSupportLevel);
 
         var tdTimestamp = document.createElement("td");
-        tdTimestamp.innerText = item.Message;  // Adjust based on actual structure
+        tdTimestamp.innerText = json_file.Timestamp || 'N/A';  // Подкорректируйте в зависимости от структуры данных
         tr.appendChild(tdTimestamp);
 
         var tdEndpoint = document.createElement("td");
-        tdEndpoint.innerText = item.Message;  // Adjust based on actual structure
+        tdEndpoint.innerText = json_file.Endpoint || 'N/A';  // Подкорректируйте в зависимости от структуры данных
         tr.appendChild(tdEndpoint);
 
         var tdMessage = document.createElement("td");
-        tdMessage.innerText = item.Message;  // Adjust based on actual structure
+        tdMessage.innerText = json_file.Message || 'N/A';  // Подкорректируйте в зависимости от структуры данных
         tr.appendChild(tdMessage);
     });
 }
 
+// Получение данных из файла 'datatest.json'
 fetch('datatest.json')
-    .then(response => response.json())
+    .then(response => response.json()) // Преобразуем ответ в JSON
     .then(jsonData => {
-        create_str(jsonData); // Call create_str with the full jsonData
+        create_str(jsonData);  // Вызов функции create_str с данными jsonData
     })
-    .catch(error => console.error('Error fetching data:', error));
+    .catch(error => console.error('Ошибка при получении данных:', error));
+

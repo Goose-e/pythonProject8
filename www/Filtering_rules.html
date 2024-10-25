@@ -31,7 +31,10 @@
     </div>
 </div>
 
-<div id="stat"></div>
+<div id="stat">
+    <img src="files/images/Tima.jpg" id="Tima">
+    <p id="month-worker">Работник месяца</p>
+</div>
 <div id="rulesforinfo">
     <form id="filterForm" method="post" onsubmit="submitFilter()">
         <div id="message-sens">
@@ -54,20 +57,21 @@
         </div>
     </form>
 </div>
-
-<div id="table">
-    <p id="massage-sens">List of regular expressions</p>
-    <div id = "list-values">
-        <table>
-          <tr id="welcome-string">
-            <td>Numer</td>
-            <td>Expression name</td>
-            <td>Date</td>
-            <td>STATUS</td>
-          </tr>
-        </table>
-      </div>
-</div>
+<form id="TableForm" method="post" onsubmit="">
+    <div id="table">
+        <p id="massage-sens">List of regular expressions</p>
+        <div id="list-values">
+            <table>
+                <tr id="welcome-string">
+                    <td>Numer</td>
+                    <td>Expression name</td>
+                    <td>Date</td>
+                    <td>STATUS</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</form>
 <script src="files/js/Filtering.js"></script>
 </body>
 </html>
