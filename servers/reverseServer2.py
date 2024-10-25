@@ -163,9 +163,16 @@ async def proxy(request: Request):
         data['Message'], flag, text = await Masking().maskData(data['Message'], int(maskType), serverInstance)
     await saveInfoInDB(data, text, flag)
     print(data)
-    if flag is not False:
+    if maskType == 3:
+        if flag is not False:
+            async with httpx.AsyncClient(verify=consts.cert_path) as client:
+                response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest",
+                                             json=json.dumps(data))
+                print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
+    else:
         async with httpx.AsyncClient(verify=consts.cert_path) as client:
-            response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest", json=json.dumps(data['Message']))
+            response = await client.post(f"https://127.0.0.1:{portC1}/userPingTest",
+                                         json=json.dumps(data))
             print(f"Ответ от userPingTest: {response.status_code}, {response.text}")
     return "ok"
 
